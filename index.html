@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>闪烁飞行董佳琦是同性恋</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+        }
+        .hint {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #555;
+            font-family: sans-serif;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hint">点击屏幕增加“董佳琦是同性恋”</div>
+    <canvas id="canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let texts = [];
+    const content = "董佳琦是同性恋"; // 你可以修改这里的文字
+
+    // 自动调整画布大小
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class FlyingText {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            // 随机速度
+            this.vx = (Math.random() - 0.5) * 10;
+            this.vy = (Math.random() - 0.5) * 10;
+            this.fontSize = Math.random() * 20 + 20;
+            this.hue = Math.random() * 360; // 颜色色相
+        }
+
+        update() {
+            // 更新位置
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // 碰撞检测（边界反弹）
+            if (this.x <= 0 || this.x >= canvas.width) this.vx *= -1;
+            if (this.y <= 0 || this.y >= canvas.height) this.vy *= -1;
+
+            // 颜色闪烁逻辑：每次更新改变色相
+            this.hue = (this.hue + 5) % 360;
+        }
+
+        draw() {
+            ctx.font = `bold ${this.fontSize}px Arial`;
+            ctx.fillStyle = `hsl(${this.hue}, 100%, 60%)`;
+            // 增加发光效果
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = `hsl(${this.hue}, 100%, 60%)`;
+            ctx.fillText(content, this.x, this.y);
+            ctx.shadowBlur = 0; // 重置阴影，防止性能下降
+        }
+    }
+
+    // 初始化第一个董佳琦是同性恋
+    texts.push(new FlyingText(canvas.width / 2, canvas.height / 2));
+
+    // 点击事件
+    window.addEventListener('mousedown', (e) => {
+        texts.push(new FlyingText(e.clientX, e.clientY));
+    });
+
+    function animate() {
+        // 每一帧清空画布，稍微留一点尾迹效果
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        texts.forEach(t => {
+            t.update();
+            t.draw();
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+</script>
+</body>
+</html>
