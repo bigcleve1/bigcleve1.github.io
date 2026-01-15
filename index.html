@@ -3,23 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>526给王 - Canvas原生排行版</title>
+    <title>526给王 - 终极决战版</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #050505; user-select: none; touch-action: none; }
+        body { margin: 0; overflow: hidden; background-color: #050505; user-select: none; touch-action: none; font-family: "SF Pro Text", "Microsoft YaHei", sans-serif; }
         canvas { display: block; }
+        
+        /* 结算界面样式 */
+        #end-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 200;
+        }
+        #win-title { font-size: 60px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 20px #ff3b30; }
+        #win-name { font-size: 30px; margin-bottom: 40px; color: #ffcc00; }
+        #restart-btn {
+            padding: 12px 40px;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+        #restart-btn:hover { background: white; color: black; }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    
+    <div id="end-screen">
+        <div id="win-title">526给王</div>
+        <div id="win-name"></div>
+        <button id="restart-btn" onclick="resetGame()">重新开始</button>
+    </div>
 
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
+    const endScreen = document.getElementById('end-screen');
+    const winNameDisp = document.getElementById('win-name');
 
     let texts = [];
     let particles = [];
     let shakeTime = 0;
     let bgOverlay = 0;
+    let isGameOver = false;
 
     const names = ["董佳琦", "翟利杰", "李子奥", "王浩瑞", "杜英达", "燕奕轩", "徐浩伦", "温祖国", "尚淼晨", "冯天乐", "谷禹龙", "田星", "王烨阳", "庞逸桐", "王晨骁"];
 
@@ -32,24 +67,19 @@
 
     class Particle {
         constructor(x, y, hue, forceScale = 1) {
-            this.x = x;
-            this.y = y;
-            this.hue = hue;
-            this.size = Math.random() * 4 + 2;
+            this.x = x; this.y = y; this.hue = hue;
+            this.size = Math.random() * 5 + 2;
             const angle = Math.random() * Math.PI * 2;
-            const force = (Math.random() * 6 + 4) * forceScale;
+            const force = (Math.random() * 10 + 5) * forceScale;
             this.vx = Math.cos(angle) * force;
             this.vy = Math.sin(angle) * force;
             this.life = 1.0;
-            this.decay = Math.random() * 0.02 + 0.015;
-            this.gravity = 0.15;
+            this.decay = Math.random() * 0.01 + 0.01;
+            this.gravity = 0.1;
         }
         update() {
-            this.vx *= 0.96;
-            this.vy *= 0.96;
-            this.vy += this.gravity;
-            this.x += this.vx;
-            this.y += this.vy;
+            this.vx *= 0.97; this.vy *= 0.97; this.vy += this.gravity;
+            this.x += this.vx; this.y += this.vy;
             this.life -= this.decay;
         }
         draw() {
@@ -63,9 +93,7 @@
 
     class FlyingText {
         constructor(x, y, name, level = 1) {
-            this.x = x;
-            this.y = y;
-            this.name = name;
+            this.x = x; this.y = y; this.name = name;
             this.content = name + "是给";
             this.level = level;
             this.vx = (Math.random() - 0.5) * (6 + level);
@@ -74,32 +102,34 @@
             this.baseSize = 22 + (this.level - 1) * 8;
             this.scale = 2.0;
             this.toRemove = false;
+            this.isWinner = false;
             this.updateMetrics();
         }
-
         updateMetrics() {
             ctx.font = `bold ${this.baseSize}px "Microsoft YaHei"`;
             this.width = ctx.measureText(this.content).width;
         }
-
         update() {
-            this.x += this.vx;
-            this.y += this.vy;
+            if (this.isWinner) {
+                // 赢家缓缓向中心移动并放大
+                this.x += (canvas.width/2 - this.width/2 - this.x) * 0.05;
+                this.y += (canvas.height/2 - this.y) * 0.05;
+                this.scale = 1.5;
+                return;
+            }
+            this.x += this.vx; this.y += this.vy;
             if (this.scale > 1) this.scale -= 0.1;
-            if (this.x <= 0) { this.vx *= -1; this.x = 0; }
-            if (this.x >= canvas.width - this.width) { this.vx *= -1; this.x = canvas.width - this.width; }
-            if (this.y <= this.baseSize) { this.vy *= -1; this.y = this.baseSize; }
-            if (this.y >= canvas.height) { this.vy *= -1; this.y = canvas.height; }
+            if (this.x <= 0 || this.x >= canvas.width - this.width) this.vx *= -1;
+            if (this.y <= this.baseSize || this.y >= canvas.height) this.vy *= -1;
             this.hue = (this.hue + 1) % 360;
         }
-
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
             ctx.scale(this.scale, this.scale);
             const color = `hsl(${this.hue}, 100%, 75%)`;
             ctx.font = `bold ${this.baseSize}px "Microsoft YaHei"`;
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 15;
             ctx.shadowColor = color;
             ctx.fillStyle = color;
             ctx.fillText(this.content, 0, 0);
@@ -107,55 +137,11 @@
         }
     }
 
-    // 绘制内部排行榜函数
-    function drawLeaderboard() {
-        const stats = {};
-        texts.forEach(t => {
-            if (!stats[t.name] || t.level > stats[t.name]) {
-                stats[t.name] = t.level;
-            }
-        });
-
-        const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        if (sorted.length === 0) return;
-
-        const padding = 20;
-        const rectWidth = 180;
-        const rectHeight = 40 + sorted.length * 25;
-        const startX = canvas.width - rectWidth - 20;
-        const startY = 20;
-
-        // 绘制半透明背景
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.beginPath();
-        ctx.roundRect(startX, startY, rectWidth, rectHeight, 15);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.stroke();
-
-        // 绘制标题
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 16px "Microsoft YaHei"';
-        ctx.fillText('实时排行', startX + 15, startY + 28);
-
-        // 绘制排名项
-        sorted.forEach(([name, level], index) => {
-            const itemY = startY + 55 + index * 25;
-            ctx.font = '14px "Microsoft YaHei"';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.fillText(`${name}`, startX + 15, itemY);
-            
-            ctx.fillStyle = `hsl(${(Date.now()/20)%360}, 80%, 70%)`;
-            ctx.font = 'bold 12px "Microsoft YaHei"';
-            ctx.fillText(`Lv.${level}`, startX + rectWidth - 50, itemY);
-        });
-    }
-
     function handleAction(e) {
+        if (isGameOver) return;
         const x = (e.clientX || (e.touches && e.touches[0].clientX));
         const y = (e.clientY || (e.touches && e.touches[0].clientY));
         if (!x || !y) return;
-
         const name = names[Math.floor(Math.random() * names.length)];
         texts.push(new FlyingText(x, y, name));
         for(let i=0; i<8; i++) particles.push(new Particle(x, y, Math.random()*360));
@@ -164,44 +150,84 @@
     canvas.addEventListener('mousedown', handleAction);
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleAction(e); }, { passive: false });
 
-    function animate() {
-        ctx.fillStyle = '#050505';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function triggerWin(winner) {
+        isGameOver = true;
+        winner.isWinner = true;
+        
+        // 除了赢家，全部爆裂
+        texts.forEach(t => {
+            if (t !== winner) {
+                for(let i=0; i<15; i++) particles.push(new Particle(t.x + t.width/2, t.y, t.hue));
+            }
+        });
+        texts = [winner]; 
+        
+        shakeTime = 30;
+        bgOverlay = 0.8;
 
-        // 合成逻辑
+        setTimeout(() => {
+            winNameDisp.innerText = winner.name;
+            endScreen.style.display = 'block';
+        }, 1000);
+    }
+
+    function resetGame() {
+        texts = [];
+        particles = [];
+        isGameOver = false;
+        endScreen.style.display = 'none';
+        bgOverlay = 0;
+    }
+
+    function checkSynthesis() {
+        if (isGameOver) return;
         for (let i = 0; i < texts.length; i++) {
             for (let j = i + 1; j < texts.length; j++) {
-                let t1 = texts[i];
-                let t2 = texts[j];
+                let t1 = texts[i]; let t2 = texts[j];
                 if (!t1.toRemove && !t2.toRemove && t1.name === t2.name) {
                     const dx = (t1.x + t1.width/2) - (t2.x + t2.width/2);
                     const dy = t1.y - t2.y;
                     if (Math.sqrt(dx*dx + dy*dy) < 60) {
                         t1.toRemove = true; t2.toRemove = true;
-                        texts.push(new FlyingText((t1.x+t2.x)/2, (t1.y+t2.y)/2, t1.name, Math.max(t1.level, t2.level)+1));
-                        shakeTime = 10;
-                        for(let k=0; k<20; k++) particles.push(new Particle((t1.x+t2.x)/2, (t1.y+t2.y)/2, t1.hue));
+                        const nextLevel = Math.max(t1.level, t2.level) + 1;
+                        const newText = new FlyingText((t1.x+t2.x)/2, (t1.y+t2.y)/2, t1.name, nextLevel);
+                        texts.push(newText);
+                        
+                        if (nextLevel >= 10) {
+                            triggerWin(newText);
+                        } else {
+                            shakeTime = 10;
+                            for(let k=0; k<20; k++) particles.push(new Particle((t1.x+t2.x)/2, (t1.y+t2.y)/2, t1.hue));
+                        }
                     }
                 }
             }
         }
         texts = texts.filter(t => !t.toRemove);
+    }
 
-        // 震动效果应用
+    function animate() {
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         ctx.save();
         if (shakeTime > 0) {
             ctx.translate((Math.random()-0.5)*shakeTime, (Math.random()-0.5)*shakeTime);
             shakeTime--;
         }
 
+        checkSynthesis();
+        
         particles = particles.filter(p => p.life > 0);
         particles.forEach(p => { p.update(); p.draw(); });
         texts.forEach(t => { t.update(); t.draw(); });
+
+        if (bgOverlay > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${bgOverlay})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            bgOverlay -= 0.02;
+        }
         ctx.restore();
-
-        // 绘制排行榜
-        drawLeaderboard();
-
         requestAnimationFrame(animate);
     }
     animate();
