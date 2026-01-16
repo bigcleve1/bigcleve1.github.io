@@ -5,10 +5,334 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>526给王争霸赛</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #050505; user-select: none; touch-action: none; font-family: "SF Pro Text", "Microsoft YaHei", sans-serif; }
-        canvas { display: block; }
-        
-        /* 结算界面样式 */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            user-select: none;
+            touch-action: none;
+            font-family: -apple-system, "SF Pro Text", "Microsoft YaHei", sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* iOS 26 液态玻璃风格排行榜 */
+        #rank-container {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 200px;
+            background: rgba(25, 25, 27, 0.85);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 22px;
+            border: 0.8px solid rgba(255, 255, 255, 0.15);
+            padding: 20px 18px;
+            color: white;
+            z-index: 100;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateX(20px) scale(0.95);
+            animation: rankSlideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s forwards;
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+            #rank-container.collapsed {
+                width: 120px;
+                height: 50px;
+                padding: 0;
+                cursor: pointer;
+            }
+
+                #rank-container.collapsed .rank-header,
+                #rank-container.collapsed #rank-list,
+                #rank-container.collapsed .rank-toggle-btn {
+                    display: none;
+                }
+
+                #rank-container.collapsed .rank-collapsed-btn {
+                    display: flex;
+                }
+
+        .rank-collapsed-btn {
+            display: none;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 22px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+            .rank-collapsed-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+                transform: scale(1.05);
+            }
+
+        @keyframes rankSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateX(20px) scale(0.95);
+            }
+
+            70% {
+                transform: translateX(-5px) scale(1.02);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .rank-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+            .rank-header::after {
+                content: '';
+                position: absolute;
+                bottom: -1px;
+                left: 0;
+                width: 40px;
+                height: 2px;
+                background: linear-gradient(90deg, #ffcc00, transparent);
+                border-radius: 1px;
+            }
+
+        .rank-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .rank-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+            .rank-toggle-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+                transform: rotate(90deg);
+            }
+
+            .rank-toggle-btn::before {
+                content: '';
+                width: 14px;
+                height: 2px;
+                background: rgba(255, 255, 255, 0.8);
+                border-radius: 1px;
+                box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.8), 0 4px 0 rgba(255, 255, 255, 0.8);
+            }
+
+        #rank-list {
+            position: relative;
+        }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transform: translateX(-10px);
+            opacity: 0;
+            animation: rankItemSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .rank-item:hover {
+                background: rgba(255, 255, 255, 0.07);
+                transform: translateX(0) scale(1.02);
+                border-color: rgba(255, 255, 255, 0.1);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            }
+
+        @keyframes rankItemSlideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .rank-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .rank-item:hover::before {
+            opacity: 1;
+        }
+
+        .rank-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            margin-right: 12px;
+            font-family: "SF Mono", monospace;
+            transition: all 0.3s ease;
+        }
+
+        .rank-item:nth-child(1) .rank-number {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 223, 0, 0.15));
+            color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+            font-weight: 800;
+        }
+
+        .rank-item:nth-child(2) .rank-number {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(192, 192, 192, 0.15));
+            color: #c0c0c0;
+            font-weight: 800;
+        }
+
+        .rank-item:nth-child(3) .rank-number {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), rgba(205, 127, 50, 0.15));
+            color: #cd7f32;
+            font-weight: 800;
+        }
+
+        .rank-name {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .rank-item:hover .rank-name {
+            color: white;
+            transform: translateX(2px);
+        }
+
+        .rank-lv {
+            font-weight: 800;
+            color: #ffcc00;
+            font-family: "SF Mono", monospace;
+            font-size: 15px;
+            background: rgba(255, 204, 0, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 5px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 204, 0, 0.2);
+            min-width: 60px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rank-item:hover .rank-lv {
+            background: rgba(255, 204, 0, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.15);
+        }
+
+        /* 排行榜空状态 */
+        .rank-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            animation: pulse 2s infinite ease-in-out;
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .rank-empty::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 排行榜更新动画 */
+        .rank-update {
+            animation: rankUpdate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes rankUpdate {
+            0% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-5px);
+                background: rgba(255, 204, 0, 0.1);
+                border-color: rgba(255, 204, 0, 0.3);
+            }
+
+            70% {
+                transform: translateY(3px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        /* 结算界面样式 - 增强特效 */
         #end-screen {
             display: none;
             position: absolute;
@@ -18,219 +342,1702 @@
             text-align: center;
             color: white;
             z-index: 200;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
-        #win-title { font-size: 60px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 20px #ff3b30; }
-        #win-name { font-size: 30px; margin-bottom: 40px; color: #ffcc00; }
+
+        #win-title {
+            font-size: 80px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px #ff3b30, 0 0 60px #ff3b30, 0 0 90px #ff3b30;
+            background: linear-gradient(45deg, #ff3b30, #ff9500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: winTitleGlow 2s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes winTitleGlow {
+            0% {
+                filter: brightness(1) drop-shadow(0 0 20px rgba(255, 59, 48, 0.5));
+                transform: scale(1);
+            }
+
+            100% {
+                filter: brightness(1.2) drop-shadow(0 0 40px rgba(255, 59, 48, 0.8));
+                transform: scale(1.05);
+            }
+        }
+
+        #win-name {
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #ffcc00;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(255, 204, 0, 0.5), 0 0 40px rgba(255, 204, 0, 0.3);
+            animation: winNamePulse 1.5s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes winNamePulse {
+            0% {
+                transform: scale(1);
+                text-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+            }
+
+            100% {
+                transform: scale(1.1);
+                text-shadow: 0 0 40px rgba(255, 204, 0, 0.8);
+            }
+        }
+
         #restart-btn {
-            padding: 12px 40px;
-            font-size: 18px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
+            padding: 16px 50px;
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
-            border-radius: 30px;
+            border-radius: 35px;
             cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: 0.3s;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 2;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
         }
-        #restart-btn:hover { background: white; color: black; }
+
+            #restart-btn:hover {
+                background: rgba(255, 255, 255, 0.25);
+                transform: translateY(-3px) scale(1.05);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+                border-color: rgba(255, 255, 255, 0.5);
+            }
+
+            #restart-btn:active {
+                transform: translateY(0) scale(0.98);
+            }
+
+        /* 胜利背景特效 */
+        .win-bg-effects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .win-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .win-light-beam {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.1) 0%, transparent 70%);
+            top: -50%;
+            left: -50%;
+            animation: lightRotate 20s linear infinite;
+        }
+
+        @keyframes lightRotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 设置按钮样式 - iOS 26 液态玻璃 */
+        #settings-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-radius: 12px;
+            border: 0.8px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 1;
+            transform: scale(1);
+        }
+
+            #settings-btn.hidden {
+                opacity: 0;
+                transform: scale(0.8);
+                pointer-events: none;
+            }
+
+            #settings-btn svg {
+                width: 24px;
+                height: 24px;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+
+            #settings-btn:hover svg {
+                transform: rotate(45deg) scale(1.1);
+            }
+
+            #settings-btn:hover {
+                background: rgba(255, 255, 255, 0.18);
+                transform: scale(1.05);
+            }
+
+        /* 设置菜单样式 - iOS 26 液态玻璃 */
+        #settings-menu {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 0;
+            height: 0;
+            background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(60px) saturate(220%);
+            -webkit-backdrop-filter: blur(60px) saturate(220%);
+            border-radius: 28px;
+            border: 0.8px solid rgba(255, 255, 255, 0.18);
+            padding: 0;
+            color: white;
+            z-index: 99;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 0 0.8px rgba(255, 255, 255, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+            #settings-menu.active {
+                width: 340px;
+                height: 540px;
+                opacity: 1;
+                pointer-events: auto;
+                padding: 28px;
+                transform: translate(0, 0) scale(1);
+                animation: liquidGlass 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+
+        @keyframes liquidGlass {
+            0% {
+                border-radius: 100px;
+            }
+
+            50% {
+                border-radius: 35px;
+            }
+
+            100% {
+                border-radius: 28px;
+            }
+        }
+
+        .menu-header {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s;
+        }
+
+        #settings-menu.active .menu-header {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .menu-content {
+            height: 430px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scroll-content {
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+            /* 自定义滚动条 */
+            .scroll-content::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .scroll-content::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(5px);
+                border-radius: 3px;
+            }
+
+            .scroll-content::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 3px;
+            }
+
+                .scroll-content::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.25);
+                }
+
+        .menu-section {
+            margin-bottom: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #settings-menu.active .menu-section {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .menu-section:nth-child(1) {
+            transition-delay: 0.15s;
+        }
+
+        .menu-section:nth-child(2) {
+            transition-delay: 0.25s;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .probability-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            padding: 12px 0;
+            border-bottom: 0.8px solid rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        #settings-menu.active .probability-item {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .probability-item:nth-child(1) {
+            transition-delay: 0.2s;
+        }
+
+        .probability-item:nth-child(2) {
+            transition-delay: 0.25s;
+        }
+
+        .probability-item:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .probability-item:nth-child(4) {
+            transition-delay: 0.35s;
+        }
+
+        .probability-item:nth-child(5) {
+            transition-delay: 0.4s;
+        }
+
+        .probability-item:nth-child(6) {
+            transition-delay: 0.45s;
+        }
+
+        .probability-item:nth-child(7) {
+            transition-delay: 0.5s;
+        }
+
+        .probability-item:nth-child(8) {
+            transition-delay: 0.55s;
+        }
+
+        .probability-item:nth-child(9) {
+            transition-delay: 0.6s;
+        }
+
+        .probability-item:nth-child(10) {
+            transition-delay: 0.65s;
+        }
+
+        .probability-item:nth-child(11) {
+            transition-delay: 0.7s;
+        }
+
+        .probability-item:nth-child(12) {
+            transition-delay: 0.75s;
+        }
+
+        .probability-item:nth-child(13) {
+            transition-delay: 0.8s;
+        }
+
+        .probability-item:nth-child(14) {
+            transition-delay: 0.85s;
+        }
+
+        .probability-item:nth-child(15) {
+            transition-delay: 0.9s;
+        }
+
+        .probability-item:nth-child(16) {
+            transition-delay: 0.95s;
+        }
+
+        .prob-name {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .prob-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .prob-value {
+            min-width: 48px;
+            text-align: center;
+            font-family: "SF Mono", monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffcc00;
+            background: rgba(255, 204, 0, 0.12);
+            backdrop-filter: blur(5px);
+            padding: 5px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 204, 0, 0.25);
+        }
+        /* iOS 26风格进度条 */
+        .prob-slider {
+            flex: 2;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(5px);
+            border-radius: 3px;
+            outline: none;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+            .prob-slider::before {
+                content: '';
+                position: absolute;
+                top: -4px;
+                left: 0;
+                right: 0;
+                height: 14px;
+                border-radius: 7px;
+                background: transparent;
+            }
+
+            .prob-slider::-webkit-slider-track {
+                background: transparent;
+                height: 6px;
+                border-radius: 3px;
+            }
+
+            .prob-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 26px;
+                height: 26px;
+                background: #007AFF;
+                backdrop-filter: blur(10px);
+                border-radius: 50%;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 0 0 4px rgba(0, 122, 255, 0.12);
+                border: 2px solid white;
+                transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+
+                .prob-slider::-webkit-slider-thumb:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 0 0 4px rgba(0, 122, 255, 0.2);
+                }
+
+                .prob-slider::-webkit-slider-thumb:active {
+                    transform: scale(0.95);
+                    box-shadow: 0 3px 10px rgba(0, 122, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 0 0 4px rgba(0, 122, 255, 0.12);
+                }
+        /* 进度条填充效果 */
+        .slider-container {
+            position: relative;
+            flex: 2;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(5px);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .slider-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #007AFF, #00C6FF);
+            border-radius: 3px;
+            transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .menu-btn {
+            width: 100%;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 14px;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0;
+            transform: translateY(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+
+        #settings-menu.active .menu-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu-btn:active {
+            transform: translateY(0);
+            transition: all 0.1s ease;
+        }
+
+        #reset-prob-btn {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.18), rgba(255, 69, 58, 0.12));
+            color: #ff3b30;
+            border-color: rgba(255, 59, 48, 0.3);
+        }
+
+            #reset-prob-btn:hover {
+                background: linear-gradient(135deg, rgba(255, 59, 48, 0.28), rgba(255, 69, 58, 0.22));
+                transform: translateY(-3px);
+                box-shadow: 0 10px 30px rgba(255, 59, 48, 0.12);
+            }
+
+        #other-games-btn {
+            background: linear-gradient(135deg, rgba(88, 86, 214, 0.18), rgba(100, 92, 255, 0.12));
+            border-color: rgba(88, 86, 214, 0.3);
+        }
+
+            #other-games-btn:hover {
+                background: linear-gradient(135deg, rgba(88, 86, 214, 0.28), rgba(100, 92, 255, 0.22));
+                box-shadow: 0 10px 30px rgba(88, 86, 214, 0.12);
+            }
+
+        .menu-close {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 24px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 0;
+            line-height: 1;
+        }
+
+            .menu-close:hover {
+                background: rgba(255, 255, 255, 0.22);
+                color: white;
+                transform: rotate(90deg) scale(1.1);
+            }
+
+            .menu-close:active {
+                transform: rotate(90deg) scale(0.95);
+            }
+        /* 侧边滚动条容器 */
+        .scrollbar-container {
+            position: absolute;
+            top: 0;
+            right: 5px;
+            width: 8px;
+            height: 100%;
+            padding: 5px 0;
+        }
+
+        .scrollbar-track {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .scrollbar-thumb {
+            position: absolute;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(0, 122, 255, 0.8), rgba(0, 199, 255, 0.8));
+            backdrop-filter: blur(5px);
+            border-radius: 4px;
+            transition: background 0.3s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: grab;
+            box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);
+        }
+
+            .scrollbar-thumb:hover, .scrollbar-thumb.dragging {
+                background: linear-gradient(180deg, #007AFF, #00C7FF);
+                transform: scaleX(1.3);
+            }
+        /* 装饰环效果 */
+        .settings-ring {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            z-index: 98;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #settings-menu.active ~ .settings-ring {
+            opacity: 0;
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+        }
+
+        /* 排行榜粒子效果 */
+        .rank-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 204, 0, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    
+
+    <!-- 设置按钮 -->
+    <div id="settings-btn" onclick="toggleSettings()">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+        </svg>
+    </div>
+
+    <!-- 装饰环 -->
+    <div class="settings-ring"></div>
+
+    <!-- 设置菜单 -->
+    <div id="settings-menu">
+        <div class="menu-header">
+            <span>游戏设置</span>
+            <button class="menu-close" onclick="toggleSettings()">×</button>
+        </div>
+
+        <div class="menu-content">
+            <div class="scroll-content" id="scroll-content">
+                <div class="menu-section">
+                    <div class="section-title">神秘地球人出现概率</div>
+                    <div id="probability-controls">
+                        <!-- 这里会通过JavaScript动态生成 -->
+                    </div>
+                    <button class="menu-btn" id="reset-prob-btn" onclick="resetProbabilities()">重置概率</button>
+                </div>
+
+                <div class="menu-section">
+                    <div class="section-title">更多史</div>
+                    <button class="menu-btn" id="other-games-btn" onclick="showOtherGames()">其他神必游戏</button>
+                </div>
+            </div>
+
+            <!-- 自定义侧边滚动条 -->
+            <div class="scrollbar-container">
+                <div class="scrollbar-track">
+                    <div class="scrollbar-thumb" id="scrollbar-thumb"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜 -->
+    <div id="rank-container" onclick="toggleRankCollapse(event)">
+        <div class="rank-collapsed-btn">排行榜</div>
+        <div class="rank-header">
+            <div class="rank-title">GAY等级</div>
+            <div class="rank-toggle-btn"></div>
+        </div>
+        <div id="rank-list">
+            <div class="rank-empty">看你老冯子呢<br><span style="font-size: 12px;">开始游戏后显示</span></div>
+        </div>
+    </div>
+
+    <!-- 胜利界面 -->
     <div id="end-screen">
-        <div id="win-title">526给王</div>
+        <div class="win-bg-effects" id="win-bg-effects"></div>
+        <div id="win-title">526的同性恋之王</div>
         <div id="win-name"></div>
         <button id="restart-btn" onclick="resetGame()">重新开始</button>
     </div>
 
-<script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
-    const endScreen = document.getElementById('end-screen');
-    const winNameDisp = document.getElementById('win-name');
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const endScreen = document.getElementById('end-screen');
+        const winNameDisp = document.getElementById('win-name');
+        const rankList = document.getElementById('rank-list');
+        const rankContainer = document.getElementById('rank-container');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsMenu = document.getElementById('settings-menu');
+        const probabilityControls = document.getElementById('probability-controls');
+        const scrollContent = document.getElementById('scroll-content');
+        const scrollbarThumb = document.getElementById('scrollbar-thumb');
+        const winBgEffects = document.getElementById('win-bg-effects');
 
-    let texts = [];
-    let particles = [];
-    let shakeTime = 0;
-    let bgOverlay = 0;
-    let isGameOver = false;
+        let texts = [];
+        let particles = [];
+        let shakeTime = 0;
+        let bgOverlay = 0;
+        let isGameOver = false;
+        let winParticles = [];
 
-    const names = ["董佳琦", "翟利杰", "李子奥", "王浩睿", "杜英达", "燕奕轩", "徐浩伦", "温祖国", "尚淼晨", "冯天乐", "谷禹龙", "田星", "王烨阳", "庞逸桐", "王晨骁", "罗文浩"];
+        // 追踪最高等级
+        let bestLevels = {};
 
-    function resize() {
+        // 排行榜更新动画计时器
+        let rankUpdateAnimations = {};
+
+        const names = ["董佳琦", "翟利杰", "李子奥", "王浩睿", "杜英达", "燕奕轩", "徐浩伦", "温祖国", "尚淼晨", "冯天乐", "谷禹龙", "田星", "王烨阳", "庞逸桐", "王晨骁", "罗文浩"];
+
+        // 名字出现概率数组，初始为均匀分布
+        let nameProbabilities = [];
+
+        // 滚动条相关变量
+        let isDraggingScrollbar = false;
+        let scrollbarStartY = 0;
+        let thumbStartY = 0;
+
+        // 初始化概率数组
+        function initProbabilities() {
+        // 初始化为均匀分布
+        const baseProbability = 1 / names.length;
+        nameProbabilities = names.map(name => ({
+        name: name,
+        probability: baseProbability,
+        weight: 1 // 权重值，用于滑块控制
+        }));
+
+        // 生成概率控制UI
+        updateProbabilityUI();
+        updateScrollbar();
+        }
+
+        // 更新概率控制UI - 使用iOS风格进度条
+        function updateProbabilityUI() {
+        probabilityControls.innerHTML = nameProbabilities.map((item, index) => `
+        <div class="probability-item" data-index="${index}">
+        <div class="prob-name">${item.name}</div>
+        <div class="prob-controls">
+        <div class="slider-container">
+        <div class="slider-fill" id="slider-fill-${index}" style="width: ${Math.round(item.weight * 100)}%"></div>
+        <input type="range" class="prob-slider" min="0" max="100" value="${Math.round(item.weight * 100)}"
+        oninput="updateProbability(${index}, this.value)"
+        onchange="updateProbability(${index}, this.value)"
+        ontouchstart="this.classList.add('active')"
+        ontouchend="this.classList.remove('active')"
+        onmousedown="this.classList.add('active')"
+        onmouseup="this.classList.remove('active')">
+        </div>
+        <div class="prob-value">${Math.round(item.weight * 100)}%</div>
+        </div>
+        </div>
+        `).join('');
+
+        // 重新计算实际概率
+        calculateProbabilities();
+        // 更新滚动条
+        setTimeout(updateScrollbar, 100);
+        }
+
+        // 更新单个名字的概率权重
+        function updateProbability(index, weightValue) {
+        // 将输入值转换为0-1之间的权重
+        const weight = weightValue / 100;
+        nameProbabilities[index].weight = weight;
+
+        // 更新显示值
+        const valueElements = document.querySelectorAll('.prob-value');
+        if (valueElements[index]) {
+        valueElements[index].textContent = `${Math.round(weight * 100)}%`;
+        }
+
+        // 更新进度条填充
+        const fillElement = document.getElementById(`slider-fill-${index}`);
+        if (fillElement) {
+        fillElement.style.width = `${Math.round(weight * 100)}%`;
+        }
+
+        // 重新计算实际概率
+        calculateProbabilities();
+
+        // 添加点击反馈
+        const slider = document.querySelectorAll('.prob-slider')[index];
+        if (slider) {
+        slider.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+        slider.style.transform = 'scale(1)';
+        }, 100);
+        }
+        }
+
+        // 根据权重计算实际概率
+        function calculateProbabilities() {
+        // 计算总权重
+        const totalWeight = nameProbabilities.reduce((sum, item) => sum + item.weight, 0);
+
+        // 避免除以零
+        if (totalWeight === 0) {
+        // 如果总权重为零，则设置均匀分布
+        nameProbabilities.forEach(item => {
+        item.probability = 1 / names.length;
+        });
+        } else {
+        // 根据权重计算实际概率
+        nameProbabilities.forEach(item => {
+        item.probability = item.weight / totalWeight;
+        });
+        }
+        }
+
+        // 根据概率选择一个名字
+        function selectNameByProbability() {
+        // 生成一个0-1的随机数
+        const random = Math.random();
+        let cumulativeProbability = 0;
+
+        // 遍历概率数组，找到对应的名字
+        for (const item of nameProbabilities) {
+        cumulativeProbability += item.probability;
+        if (random <= cumulativeProbability) {
+        return item.name;
+        }
+        }
+
+        // 如果由于浮点数精度问题没有返回，返回最后一个名字
+        return nameProbabilities[nameProbabilities.length - 1].name;
+        }
+
+        // 重置概率为均匀分布
+        function resetProbabilities() {
+        nameProbabilities.forEach((item, index) => {
+        item.weight = 1;
+        updateProbability(index, 100);
+        });
+
+        // 添加重置按钮的点击动画
+        const resetBtn = document.getElementById('reset-prob-btn');
+        resetBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+        resetBtn.style.transform = 'scale(1)';
+        }, 150);
+        }
+
+        // 显示其他游戏（暂不实现功能）
+        function showOtherGames() {
+        alert("其他神必游戏功能开发中，敬请期待！");
+        // 可以先关闭菜单
+        toggleSettings();
+        }
+
+        // 切换设置菜单显示/隐藏
+        function toggleSettings() {
+        const isActive = settingsMenu.classList.contains('active');
+
+        if (!isActive) {
+        // 打开菜单
+        settingsMenu.classList.add('active');
+        settingsBtn.classList.add('hidden');
+
+        // 如果菜单打开，阻止游戏点击
+        canvas.style.pointerEvents = 'none';
+        rankList.style.pointerEvents = 'none';
+        // 添加滚动条事件监听
+        addScrollbarListeners();
+        updateScrollbar();
+        } else {
+        // 关闭菜单
+        settingsMenu.classList.remove('active');
+
+        // 延迟显示设置按钮，让菜单关闭动画完成
+        setTimeout(() => {
+        settingsBtn.classList.remove('hidden');
+        canvas.style.pointerEvents = 'auto';
+        rankList.style.pointerEvents = 'auto';
+        // 移除滚动条事件监听
+        removeScrollbarListeners();
+        }, 400); // 与菜单关闭动画时间匹配
+        }
+        }
+
+        // 切换排行榜折叠状态
+        function toggleRankCollapse(event) {
+        // 防止事件冒泡，确保只有点击折叠按钮才触发
+        if (event.target.closest('.rank-toggle-btn') || rankContainer.classList.contains('collapsed')) {
+        rankContainer.classList.toggle('collapsed');
+        }
+        }
+
+        // 创建胜利界面粒子效果
+        function createWinParticles() {
+        winParticles = [];
+        const particleCount = 100;
+
+        for (let i = 0; i < particleCount; i++) {
+        const particle = {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 8 + 2,
+        speed: Math.random() * 2 + 0.5,
+        color: `hsla(${Math.random() * 60 + 20}, 100%, 70%, ${Math.random() * 0.5 + 0.3})`,
+        angle: Math.random() * Math.PI * 2,
+        wave: Math.random() * Math.PI * 2,
+        waveSpeed: Math.random() * 0.05 + 0.02,
+        rotation: 0,
+        rotationSpeed: (Math.random() - 0.5) * 0.1
+        };
+        winParticles.push(particle);
+        }
+
+        // 添加旋转光束
+        const lightBeam = document.createElement('div');
+        lightBeam.className = 'win-light-beam';
+        winBgEffects.appendChild(lightBeam);
+
+        // 创建胜利粒子DOM元素
+        for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'win-particle';
+        particle.style.width = `${Math.random() * 10 + 5}px`;
+        particle.style.height = particle.style.width;
+        particle.style.background = `radial-gradient(circle, hsla(${Math.random() * 60 + 20}, 100%, 70%, 0.8) 0%, transparent 70%)`;
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+        winBgEffects.appendChild(particle);
+
+        // 添加浮动动画
+        particle.animate([
+        { transform: 'translate(0, 0) rotate(0deg)' },
+        { transform: `translate(${(Math.random() - 0.5) * 100}px, ${(Math.random() - 0.5) * 100}px) rotate(${Math.random() * 360}deg)` }
+        ], {
+        duration: 3000 + Math.random() * 4000,
+        direction: 'alternate',
+        iterations: Infinity,
+        easing: 'ease-in-out'
+        });
+        }
+        }
+
+        // 更新胜利粒子
+        function updateWinParticles() {
+        if (!isGameOver || winParticles.length === 0) return;
+
+        winParticles.forEach(particle => {
+        particle.x += Math.cos(particle.angle) * particle.speed;
+        particle.y += Math.sin(particle.angle) * particle.speed;
+        particle.rotation += particle.rotationSpeed;
+        particle.wave += particle.waveSpeed;
+
+        // 边界检查
+        if (particle.x < -particle.size) particle.x = canvas.width + particle.size;
+        if (particle.x > canvas.width + particle.size) particle.x = -particle.size;
+        if (particle.y < -particle.size) particle.y = canvas.height + particle.size;
+        if (particle.y > canvas.height + particle.size) particle.y = -particle.size;
+
+        // 绘制粒子
+        ctx.save();
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.rotation);
+
+        // 创建波浪效果
+        const waveOffset = Math.sin(particle.wave) * 10;
+
+        // 绘制发光粒子
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, particle.size);
+        gradient.addColorStop(0, particle.color);
+        gradient.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(waveOffset * 0.5, 0, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 绘制光晕
+        ctx.fillStyle = particle.color.replace('0.3)', '0.1)');
+        ctx.beginPath();
+        ctx.arc(waveOffset * 0.5, 0, particle.size * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+        });
+        }
+
+        // 更新滚动条
+        function updateScrollbar() {
+        if (!scrollContent || !scrollbarThumb) return;
+
+        const contentHeight = scrollContent.scrollHeight;
+        const containerHeight = scrollContent.clientHeight;
+        const scrollTop = scrollContent.scrollTop;
+
+        // 计算滚动条滑块高度
+        const thumbHeight = Math.max(30, (containerHeight / contentHeight) * 100);
+        scrollbarThumb.style.height = `${thumbHeight}%`;
+
+        // 计算滚动条滑块位置
+        const maxScroll = contentHeight - containerHeight;
+        const thumbPosition = maxScroll > 0 ? (scrollTop / maxScroll) * (100 - thumbHeight) : 0;
+        scrollbarThumb.style.top = `${thumbPosition}%`;
+        }
+
+        // 添加滚动条事件监听
+        function addScrollbarListeners() {
+        scrollContent.addEventListener('scroll', updateScrollbar);
+        scrollbarThumb.addEventListener('mousedown', startScrollbarDrag);
+        scrollContent.addEventListener('wheel', handleWheel);
+        window.addEventListener('resize', updateScrollbar);
+        }
+
+        // 移除滚动条事件监听
+        function removeScrollbarListeners() {
+        scrollContent.removeEventListener('scroll', updateScrollbar);
+        scrollbarThumb.removeEventListener('mousedown', startScrollbarDrag);
+        scrollContent.removeEventListener('wheel', handleWheel);
+        window.removeEventListener('resize', updateScrollbar);
+        }
+
+        // 开始滚动条拖动
+        function startScrollbarDrag(e) {
+        e.preventDefault();
+        isDraggingScrollbar = true;
+        scrollbarStartY = e.clientY;
+        thumbStartY = parseFloat(scrollbarThumb.style.top) || 0;
+        scrollbarThumb.classList.add('dragging');
+
+        document.addEventListener('mousemove', dragScrollbar);
+        document.addEventListener('mouseup', stopScrollbarDrag);
+        }
+
+        // 拖动滚动条
+        function dragScrollbar(e) {
+        if (!isDraggingScrollbar) return;
+
+        e.preventDefault();
+        const deltaY = e.clientY - scrollbarStartY;
+        const trackHeight = 100; // 百分比
+        const thumbHeight = parseFloat(scrollbarThumb.style.height);
+
+        // 计算新的滑块位置
+        let newTop = thumbStartY + (deltaY / scrollContent.clientHeight) * 100;
+        newTop = Math.max(0, Math.min(newTop, trackHeight - thumbHeight));
+
+        scrollbarThumb.style.top = `${newTop}%`;
+
+        // 更新内容滚动
+        const maxScroll = scrollContent.scrollHeight - scrollContent.clientHeight;
+        const scrollTop = (newTop / (trackHeight - thumbHeight)) * maxScroll;
+        scrollContent.scrollTop = scrollTop;
+        }
+
+        // 停止滚动条拖动
+        function stopScrollbarDrag() {
+        isDraggingScrollbar = false;
+        scrollbarThumb.classList.remove('dragging');
+
+        document.removeEventListener('mousemove', dragScrollbar);
+        document.removeEventListener('mouseup', stopScrollbarDrag);
+        }
+
+        // 处理鼠标滚轮
+        function handleWheel(e) {
+        // 确保在设置菜单内滚动
+        if (settingsMenu.classList.contains('active')) {
+        e.preventDefault();
+        scrollContent.scrollTop += e.deltaY;
+        }
+        }
+
+        function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+        updateScrollbar();
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-    class Particle {
-        constructor(x, y, hue, forceScale = 1) {
-            this.x = x; this.y = y; this.hue = hue;
-            this.size = Math.random() * 5 + 2;
-            const angle = Math.random() * Math.PI * 2;
-            const force = (Math.random() * 10 + 5) * forceScale;
-            this.vx = Math.cos(angle) * force;
-            this.vy = Math.sin(angle) * force;
-            this.life = 1.0;
-            this.decay = Math.random() * 0.01 + 0.01;
-            this.gravity = 0.1;
-        }
-        update() {
-            this.vx *= 0.97; this.vy *= 0.97; this.vy += this.gravity;
-            this.x += this.vx; this.y += this.vy;
-            this.life -= this.decay;
-        }
-        draw() {
-            if (this.life <= 0) return;
-            ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.life})`;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
+        // 创建排行榜粒子效果
+        function createRankParticle(x, y) {
+        const particle = document.createElement('div');
+        particle.className = 'rank-particle';
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        particle.style.opacity = '1';
 
-    class FlyingText {
-        constructor(x, y, name, level = 1) {
-            this.x = x; this.y = y; this.name = name;
-            this.content = name + "是给";
-            this.level = level;
-            this.vx = (Math.random() - 0.5) * (6 + level);
-            this.vy = (Math.random() - 0.5) * (6 + level);
-            this.hue = Math.random() * 360;
-            this.baseSize = 22 + (this.level - 1) * 8;
-            this.scale = 2.0;
-            this.toRemove = false;
-            this.isWinner = false;
-            this.updateMetrics();
-        }
-        updateMetrics() {
-            ctx.font = `bold ${this.baseSize}px "Microsoft YaHei"`;
-            this.width = ctx.measureText(this.content).width;
-        }
-        update() {
-            if (this.isWinner) {
-                // 赢家缓缓向中心移动并放大
-                this.x += (canvas.width/2 - this.width/2 - this.x) * 0.05;
-                this.y += (canvas.height/2 - this.y) * 0.05;
-                this.scale = 1.5;
-                return;
-            }
-            this.x += this.vx; this.y += this.vy;
-            if (this.scale > 1) this.scale -= 0.1;
-            if (this.x <= 0 || this.x >= canvas.width - this.width) this.vx *= -1;
-            if (this.y <= this.baseSize || this.y >= canvas.height) this.vy *= -1;
-            this.hue = (this.hue + 1) % 360;
-        }
-        draw() {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.scale(this.scale, this.scale);
-            const color = `hsl(${this.hue}, 100%, 75%)`;
-            ctx.font = `bold ${this.baseSize}px "Microsoft YaHei"`;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = color;
-            ctx.fillStyle = color;
-            ctx.fillText(this.content, 0, 0);
-            ctx.restore();
-        }
-    }
+        rankContainer.appendChild(particle);
 
-    function handleAction(e) {
+        // 粒子动画
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 20 + Math.random() * 30;
+        const duration = 400 + Math.random() * 300;
+
+        particle.animate([
+        {
+        transform: 'translate(0, 0) scale(1)',
+        opacity: 1
+        },
+        {
+        transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0.3)`,
+        opacity: 0
+        }
+        ], {
+        duration: duration,
+        easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+        });
+
+        // 移除粒子
+        setTimeout(() => {
+        if (particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+        }
+        }, duration);
+        }
+
+        // 更新排行榜UI - 增强版
+        function updateRankUI() {
+        const sorted = Object.entries(bestLevels)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5); // 只显示前5名
+
+        if (sorted.length === 0) {
+        rankList.innerHTML = '<div class="rank-empty">暂无数据<br><span style="font-size: 12px;">开始游戏后显示</span></div>';
+        return;
+        }
+
+        const itemsHTML = sorted.map(([name, lv], index) => {
+        const rankNum = index + 1;
+
+        return `
+        <div class="rank-item" data-name="${name}" data-lv="${lv}" style="animation-delay: ${0.1 + index * 0.1}s">
+        <div class="rank-number">${rankNum}</div>
+        <div class="rank-name">${name}</div>
+        <div class="rank-lv">Lv.${lv}</div>
+        </div>
+        `;
+        }).join('');
+
+        // 检查是否有项目需要更新动画
+        const currentItems = rankList.querySelectorAll('.rank-item');
+        const currentData = Array.from(currentItems).map(item => ({
+        name: item.dataset.name,
+        lv: parseInt(item.dataset.lv)
+        }));
+
+        rankList.innerHTML = itemsHTML;
+
+        // 为新项目或更新项目添加动画
+        setTimeout(() => {
+        const newItems = rankList.querySelectorAll('.rank-item');
+        newItems.forEach((item, index) => {
+        const name = item.dataset.name;
+        const lv = parseInt(item.dataset.lv);
+
+        // 查找旧的等级
+        const oldItem = currentData.find(old => old.name === name);
+        if (oldItem && oldItem.lv < lv) {
+        // 等级提升，添加更新动画
+        item.classList.add('rank-update');
+
+        // 创建粒子效果
+        const rect = item.getBoundingClientRect();
+        const containerRect = rankContainer.getBoundingClientRect();
+
+        // 在等级显示位置创建多个粒子
+        for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+        createRankParticle(
+        rect.right - containerRect.left - 40,
+        rect.top - containerRect.top + 20
+        );
+        }, i * 50);
+        }
+
+        // 移除动画类
+        setTimeout(() => {
+        item.classList.remove('rank-update');
+        }, 600);
+        }
+
+        // 设置动画延迟
+        item.style.animationDelay = `${0.1 + index * 0.1}s`;
+        });
+        }, 50);
+        }
+
+        function handleAction(e) {
         if (isGameOver) return;
         const x = (e.clientX || (e.touches && e.touches[0].clientX));
         const y = (e.clientY || (e.touches && e.touches[0].clientY));
         if (!x || !y) return;
-        const name = names[Math.floor(Math.random() * names.length)];
+
+        // 使用概率选择名字
+        const name = selectNameByProbability();
         texts.push(new FlyingText(x, y, name));
-        for(let i=0; i<8; i++) particles.push(new Particle(x, y, Math.random()*360));
-    }
+        // 点击时仍然使用普通粒子
+        for(let i=0; i<8; i++) particles.push(new Particle(x, y, Math.random()*360, 'normal'));
+        }
 
-    canvas.addEventListener('mousedown', handleAction);
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleAction(e); }, { passive: false });
+        canvas.addEventListener('mousedown', handleAction);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleAction(e); }, { passive: false });
 
-    function triggerWin(winner) {
+        function triggerWin(winner) {
         isGameOver = true;
         winner.isWinner = true;
-        
-        // 除了赢家，全部爆裂
+        rankContainer.style.transform = 'translateX(200px)'; // 隐藏
+
         texts.forEach(t => {
-            if (t !== winner) {
-                for(let i=0; i<15; i++) particles.push(new Particle(t.x + t.width/2, t.y, t.hue));
-            }
+        if (t !== winner) {
+        // 胜利时产生大量电火花
+        for(let i=0; i<40; i++) {
+        const hue = 30 + Math.random() * 30; // 橙色到黄色
+        particles.push(new Particle(
+        t.x + t.width/2,
+        t.y,
+        hue,
+        Math.random() > 0.7 ? 'shock' : 'spark'
+        ));
+        }
+        }
         });
-        texts = [winner]; 
-        
-        shakeTime = 30;
-        bgOverlay = 0.8;
+        texts = [winner];
+        shakeTime = 40; // 更强的震动
+        bgOverlay = 0.9;
+
+        // 创建胜利粒子特效
+        createWinParticles();
 
         setTimeout(() => {
-            winNameDisp.innerText = winner.name;
-            endScreen.style.display = 'block';
+        winNameDisp.innerText = winner.name;
+        endScreen.style.display = 'block';
         }, 1000);
-    }
+        }
 
-    function resetGame() {
+        function resetGame() {
         texts = [];
         particles = [];
+        winParticles = [];
+        bestLevels = {};
+        rankList.innerHTML = '<div class="rank-empty">暂无数据<br><span style="font-size: 12px;">开始游戏后显示</span></div>';
         isGameOver = false;
         endScreen.style.display = 'none';
+        rankContainer.style.transform = 'translateX(0)';
         bgOverlay = 0;
-    }
 
-    function checkSynthesis() {
+        // 清除胜利特效
+        winBgEffects.innerHTML = '';
+        }
+
+        function checkSynthesis() {
         if (isGameOver) return;
         for (let i = 0; i < texts.length; i++) {
-            for (let j = i + 1; j < texts.length; j++) {
-                let t1 = texts[i]; let t2 = texts[j];
-                if (!t1.toRemove && !t2.toRemove && t1.name === t2.name) {
-                    const dx = (t1.x + t1.width/2) - (t2.x + t2.width/2);
-                    const dy = t1.y - t2.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < 60) {
-                        t1.toRemove = true; t2.toRemove = true;
-                        const nextLevel = Math.max(t1.level, t2.level) + 1;
-                        const newText = new FlyingText((t1.x+t2.x)/2, (t1.y+t2.y)/2, t1.name, nextLevel);
-                        texts.push(newText);
-                        
-                        if (nextLevel >= 10) {
-                            triggerWin(newText);
-                        } else {
-                            shakeTime = 10;
-                            for(let k=0; k<20; k++) particles.push(new Particle((t1.x+t2.x)/2, (t1.y+t2.y)/2, t1.hue));
-                        }
-                    }
-                }
-            }
+        for (let j = i + 1; j < texts.length; j++) {
+        let t1 = texts[i]; let t2 = texts[j];
+        if (!t1.toRemove && !t2.toRemove && t1.name === t2.name) {
+        const dx = (t1.x + t1.width/2) - (t2.x + t2.width/2);
+        const dy = t1.y - t2.y;
+        if (Math.sqrt(dx*dx + dy*dy) < 60) {
+        t1.toRemove = true; t2.toRemove = true;
+        const nextLevel = Math.max(t1.level, t2.level) + 1;
+        const newText = new FlyingText((t1.x+t2.x)/2, (t1.y+t2.y)/2, t1.name, nextLevel);
+        texts.push(newText);
+
+        const centerX = (t1.x + t2.x) / 2;
+        const centerY = (t1.y + t2.y) / 2;
+
+        if (nextLevel >= 10) {
+        triggerWin(newText);
+        } else {
+        // 增强合成打击感
+        shakeTime = 15 + nextLevel * 2; // 根据等级增强震动
+
+        // 产生强烈的电火花特效
+        const particleCount = 15 + nextLevel * 3; // 根据等级增加粒子数量
+        for(let k=0; k<particleCount; k++) {
+        const sparkType = Math.random() > 0.8 ? 'shock' : 'spark';
+        let sparkHue;
+
+        if (sparkType === 'shock') {
+        // 强烈电击使用蓝色调
+        sparkHue = 200 + Math.random() * 40;
+        } else {
+        // 普通火花使用暖色调
+        sparkHue = 20 + Math.random() * 40;
+        }
+
+        particles.push(new Particle(
+        centerX,
+        centerY,
+        sparkHue,
+        sparkType
+        ));
+        }
+
+        // 等级越高，产生额外的闪光效果
+        if (nextLevel >= 5) {
+        for(let k=0; k<5; k++) {
+        particles.push(new Particle(
+        centerX,
+        centerY,
+        60, // 金色
+        'shock'
+        ));
+        }
+        }
+        }
+        }
+        }
+        }
         }
         texts = texts.filter(t => !t.toRemove);
-    }
+        }
 
-    function animate() {
+        class Particle {
+        constructor(x, y, hue, type = 'normal') {
+        this.x = x;
+        this.y = y;
+        this.hue = hue;
+        this.type = type; // 'normal', 'spark', 'shock'
+
+        if (type === 'spark') {
+        // 火花粒子：增强打击感
+        this.size = Math.random() * 5 + 2;
+        this.baseSize = this.size;
+        const angle = Math.random() * Math.PI * 2;
+        // 增强初始速度和爆炸力
+        const force = Math.random() * 30 + 20; // 更强的爆炸力
+        this.vx = Math.cos(angle) * force;
+        this.vy = Math.sin(angle) * force;
+        this.life = 1.0;
+        this.decay = Math.random() * 0.05 + 0.05; // 更快衰减，增加打击感
+        this.gravity = 1.2; // 更强的重力
+        this.friction = 0.88; // 更少的空气阻力，让火花飞得更远
+        this.bounce = 0.6; // 更强的反弹
+        this.onGround = false;
+        this.groundY = canvas.height;
+        this.sparkIntensity = Math.random() * 0.7 + 0.7; // 更高的强度
+        this.brightness = 100;
+        this.saturation = 100;
+        this.sparkType = Math.random() > 0.7 ? 'electric' : 'fire'; // 70%火花，30%电火花
+
+        // 电火花特殊属性
+        if (this.sparkType === 'electric') {
+        this.hue = 200 + Math.random() * 60; // 蓝色调
+        this.saturation = 100;
+        this.brightness = 100;
+        this.decay *= 0.7; // 电火花衰减更慢
+        this.friction = 0.92; // 电火花空气阻力更小
+        }
+        } else if (type === 'shock') {
+        // 强烈电击粒子：用于增强打击感
+        this.size = Math.random() * 8 + 4;
+        this.baseSize = this.size;
+        const angle = Math.random() * Math.PI * 2;
+        const force = Math.random() * 40 + 30; // 非常强的爆炸力
+        this.vx = Math.cos(angle) * force;
+        this.vy = Math.sin(angle) * force;
+        this.life = 1.0;
+        this.decay = Math.random() * 0.04 + 0.04;
+        this.gravity = 0.5; // 较小的重力，让粒子飞得更高
+        this.friction = 0.85;
+        this.bounce = 0.8;
+        this.onGround = false;
+        this.groundY = canvas.height;
+        this.sparkIntensity = Math.random() * 0.8 + 0.8;
+        this.brightness = 100;
+        this.saturation = 100;
+        this.sparkType = 'shock';
+        this.shockWave = true; // 是否产生冲击波效果
+        this.shockRadius = 0;
+        this.shockMaxRadius = 30 + Math.random() * 30;
+        } else {
+        // 普通粒子：保持原来的效果
+        this.size = Math.random() * 5 + 2;
+        const angle = Math.random() * Math.PI * 2;
+        const force = Math.random() * 10 + 5;
+        this.vx = Math.cos(angle) * force;
+        this.vy = Math.sin(angle) * force;
+        this.life = 1.0;
+        this.decay = Math.random() * 0.01 + 0.01;
+        this.gravity = 0.1;
+        this.type = 'normal';
+        }
+        }
+        update() {
+        if (this.type === 'spark' || this.type === 'shock') {
+        // 火花/电击粒子更新逻辑
+        if (this.life <= 0) return;
+
+        // 应用重力
+        this.vy += this.gravity;
+
+        // 应用空气阻力
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+
+        // 更新位置
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // 检查是否碰到地面
+        if (!this.onGround && this.y >= this.groundY - this.size) {
+        this.y = this.groundY - this.size;
+        this.vy = -Math.abs(this.vy) * this.bounce; // 反弹
+        this.vx *= 0.6; // 地面摩擦力
+
+        // 如果反弹力很小，则认为粒子停留在地面
+        if (Math.abs(this.vy) < 0.5) {
+        this.onGround = true;
+        this.vy = 0;
+        this.vx = 0;
+        }
+
+        // 电击粒子在碰撞地面时产生小火花
+        if (this.type === 'shock' && !this.onGround) {
+        for (let i = 0; i < 3; i++) {
+        particles.push(new Particle(
+        this.x, this.y,
+        this.hue, 'spark'
+        ));
+        }
+        }
+        }
+
+        // 火花闪烁效果 - 增强闪烁频率
+        if (this.sparkType === 'electric' || this.sparkType === 'shock') {
+        // 电火花闪烁更快
+        this.size = this.baseSize * (0.7 + 0.3 * Math.sin(Date.now() * 0.1 * this.sparkIntensity));
+        this.brightness = 70 + 30 * Math.sin(Date.now() * 0.08 * this.sparkIntensity);
+        } else {
+        this.size = this.baseSize * (0.8 + 0.2 * Math.sin(Date.now() * 0.05 * this.sparkIntensity));
+        }
+
+        // 生命周期衰减
+        this.life -= this.decay;
+
+        // 如果粒子停留在地面，衰减更快
+        if (this.onGround) {
+        this.life -= 0.015;
+        }
+
+        // 冲击波效果
+        if (this.type === 'shock' && this.shockWave) {
+        this.shockRadius += 2;
+        if (this.shockRadius > this.shockMaxRadius) {
+        this.shockWave = false;
+        }
+        }
+        } else {
+        // 普通粒子更新逻辑
+        this.vx *= 0.97;
+        this.vy *= 0.97;
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= this.decay;
+        }
+        }
+        draw() {
+        if (this.life <= 0) return;
+
+        if (this.type === 'spark' || this.type === 'shock') {
+        // 绘制火花/电击粒子
+        const alpha = this.life * this.sparkIntensity;
+        const hue = this.hue;
+        const saturation = this.saturation;
+        const brightness = this.brightness || 85;
+
+        if (this.sparkType === 'electric') {
+        // 绘制电火花
+        // 核心
+        ctx.fillStyle = `hsla(${hue}, ${saturation}%, ${brightness}%, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 强光晕
+        const glowSize = this.size * 3;
+        const gradient = ctx.createRadialGradient(
+        this.x, this.y, 0,
+        this.x, this.y, glowSize
+        );
+        gradient.addColorStop(0, `hsla(${hue}, ${saturation}%, 95%, ${alpha * 0.4})`);
+        gradient.addColorStop(0.5, `hsla(${hue}, ${saturation}%, 80%, ${alpha * 0.2})`);
+        gradient.addColorStop(1, `hsla(${hue}, ${saturation}%, 60%, 0)`);
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 随机闪电效果
+        if (Math.random() > 0.7) {
+        ctx.strokeStyle = `hsla(${hue}, ${saturation}%, 100%, ${alpha * 0.8})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const length = this.size * 2;
+        const angle = Math.random() * Math.PI * 2;
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(
+        this.x + Math.cos(angle) * length,
+        this.y + Math.sin(angle) * length
+        );
+        ctx.stroke();
+        }
+        } else if (this.type === 'shock') {
+        // 绘制强烈电击粒子
+        // 冲击波效果
+        if (this.shockWave) {
+        ctx.strokeStyle = `hsla(${hue}, ${saturation}%, 100%, ${alpha * 0.3 * (1 - this.shockRadius / this.shockMaxRadius)})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.shockRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        }
+
+        // 核心
+        ctx.fillStyle = `hsla(${hue}, ${saturation}%, 100%, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 强烈光晕
+        const glowSize = this.size * 4;
+        const gradient = ctx.createRadialGradient(
+        this.x, this.y, 0,
+        this.x, this.y, glowSize
+        );
+        gradient.addColorStop(0, `hsla(${hue}, ${saturation}%, 100%, ${alpha * 0.6})`);
+        gradient.addColorStop(0.7, `hsla(${hue + 20}, ${saturation}%, 80%, ${alpha * 0.2})`);
+        gradient.addColorStop(1, `hsla(${hue + 40}, ${saturation}%, 60%, 0)`);
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 随机闪电束
+        for (let i = 0; i < 3; i++) {
+        if (Math.random() > 0.5) {
+        ctx.strokeStyle = `hsla(${hue}, ${saturation}%, 100%, ${alpha * 0.6})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        const length = this.size * (3 + Math.random() * 3);
+        const angle = Math.random() * Math.PI * 2;
+        ctx.moveTo(this.x, this.y);
+
+        // 创建闪电形状
+        let x = this.x, y = this.y;
+        const segments = 4;
+        for (let j = 0; j < segments; j++) {
+        x += Math.cos(angle) * (length / segments) + (Math.random() - 0.5) * 10;
+        y += Math.sin(angle) * (length / segments) + (Math.random() - 0.5) * 10;
+        ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        }
+        }
+        } else {
+        // 绘制普通火花
+        ctx.fillStyle = `hsla(${hue}, ${saturation}%, ${brightness}%, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 光晕
+        const glowSize = this.size * 2;
+        const gradient = ctx.createRadialGradient(
+        this.x, this.y, 0,
+        this.x, this.y, glowSize
+        );
+        gradient.addColorStop(0, `hsla(${hue}, ${saturation}%, 90%, ${alpha * 0.3})`);
+        gradient.addColorStop(1, `hsla(${hue}, ${saturation}%, 70%, 0)`);
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 如果粒子在地面上，绘制微弱的反光
+        if (this.onGround) {
+        ctx.fillStyle = `hsla(${hue}, 50%, 60%, ${alpha * 0.2})`;
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y + 1, this.size * 1.5, this.size * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        }
+        }
+        } else {
+        // 绘制普通粒子
+        ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.life})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+        ctx.fill();
+        }
+        }
+        }
+
+        class FlyingText {
+        constructor(x, y, name, level = 1) {
+        this.x = x; this.y = y; this.name = name;
+        this.content = name + "是给"; // 保持原样
+        this.level = level;
+        this.vx = (Math.random() - 0.5) * (6 + level);
+        this.vy = (Math.random() - 0.5) * (6 + level);
+        this.hue = Math.random() * 360;
+        this.baseSize = 22 + (this.level - 1) * 8; // 保持原样
+        this.scale = 2.0;
+        this.toRemove = false;
+        this.isWinner = false;
+        this.updateMetrics();
+
+        // 更新排行榜逻辑
+        if (!bestLevels[name] || level > bestLevels[name]) {
+        bestLevels[name] = level;
+        updateRankUI();
+        }
+        }
+        updateMetrics() {
+        ctx.font = `bold ${this.baseSize}px "Microsoft YaHei"`;
+        this.width = ctx.measureText(this.content).width;
+        }
+        update() {
+        if (this.isWinner) {
+        this.x += (canvas.width/2 - this.width/2 - this.x) * 0.05;
+        this.y += (canvas.height/2 - this.y) * 0.05;
+        this.scale = 1.5;
+        return;
+        }
+        this.x += this.vx; this.y += this.vy;
+        if (this.scale > 1) this.scale -= 0.1;
+        if (this.x <= 0 || this.x >= canvas.width - this.width) this.vx *= -1;
+        if (this.y <= this.baseSize || this.y >= canvas.height) this.vy *= -1;
+        this.hue = (this.hue + 1) % 360;
+        }
+        draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(this.scale, this.scale);
+        const color = `hsl(${this.hue}, 100%, 75%)`;
+        ctx.font = `bold ${this.baseSize}px "Microsoft YaHei"`;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = color;
+        ctx.fillStyle = color;
+        ctx.fillText(this.content, 0, 0);
+        ctx.restore();
+        }
+        }
+
+        function animate() {
         ctx.fillStyle = '#050505';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.save();
         if (shakeTime > 0) {
-            ctx.translate((Math.random()-0.5)*shakeTime, (Math.random()-0.5)*shakeTime);
-            shakeTime--;
+        // 增强震动效果
+        const shakeIntensity = shakeTime * 0.3;
+        ctx.translate(
+        (Math.random()-0.5)*shakeIntensity,
+        (Math.random()-0.5)*shakeIntensity
+        );
+        shakeTime--;
         }
 
         checkSynthesis();
-        
+
         particles = particles.filter(p => p.life > 0);
         particles.forEach(p => { p.update(); p.draw(); });
         texts.forEach(t => { t.update(); t.draw(); });
 
+        // 更新胜利粒子
+        if (isGameOver && winParticles.length > 0) {
+        updateWinParticles();
+        }
+
         if (bgOverlay > 0) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${bgOverlay})`;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            bgOverlay -= 0.02;
+        // 增强胜利时的白光效果
+        ctx.fillStyle = `rgba(255, 255, 255, ${bgOverlay})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        bgOverlay -= 0.01;
         }
         ctx.restore();
         requestAnimationFrame(animate);
-    }
-    animate();
-</script>
+        }
+
+        // 初始化
+        initProbabilities();
+        animate();
+    </script>
 </body>
 </html>
