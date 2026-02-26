@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DOOM526</title>
+    <style>
+        /* 全局样式：深色背景，毛玻璃，液态玻璃效果 */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #050505;
+            font-family: -apple-system, "SF Pro Text", "Microsoft YaHei", sans-serif;
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-wrapper {
+            width: 100%;
+            height: 100%;
+            max-width: 1300px;
+            max-height: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* 画布容器 */
+        #canvas-container {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            display: block;
+            width: auto;
+            height: 100%;
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08);
+            background: #000;
+            outline: none;
+        }
+        /* 控制面板 —— 液态玻璃 */
+        #controls-panel {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 20px 30px;
+            background: rgba(22, 22, 24, 0.8);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 60px;
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.1);
+            box-sizing: border-box;
+        }
+        /* 摇杆区域（左侧） */
+        .joystick-area {
+            flex: 0 0 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 摇杆容器 */
+        .joystick {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(35, 35, 40, 0.6);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255,255,255,0.15);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            touch-action: none;
+        }
+
+            .joystick:active {
+                cursor: grabbing;
+            }
+        /* 摇杆头部 */
+        .joystick-head {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #f0f0f0, #a0a0a0);
+            border: 2px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.2);
+            transition: transform 0.02s linear;
+            pointer-events: none;
+            will-change: transform;
+        }
+        /* 中间功能按钮区域 */
+        .action-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .action-button {
+            min-width: 100px;
+            height: 70px;
+            border-radius: 40px;
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.1);
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 0 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+            .action-button:hover {
+                background: rgba(255,255,255,0.15);
+                transform: translateY(-3px);
+                box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            }
+
+            .action-button:active {
+                transform: scale(0.94);
+                background: rgba(0,122,255,0.6);
+                border-color: rgba(255,255,255,0.3);
+            }
+        /* 射击按钮（右侧） */
+        .fire-area {
+            flex: 0 0 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fire-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ff3b30, #b0251a);
+            border: 4px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 35px rgba(255,59,48,0.5), inset 0 -5px 0 rgba(0,0,0,0.3), inset 0 5px 8px rgba(255,255,255,0.3);
+            color: white;
+            font-size: 28px;
+            font-weight: 900;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+            backdrop-filter: blur(5px);
+            letter-spacing: 2px;
+        }
+
+            .fire-button:active {
+                transform: scale(0.8);
+                box-shadow: 0 10px 25px rgba(255,59,48,0.8), inset 0 5px 10px rgba(0,0,0,0.4);
+            }
+        /* 底部提示 */
+        .hint {
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            padding: 6px 20px;
+            border-radius: 40px;
+            background: rgba(0,0,0,0.2);
+        }
+        /* 响应式 */
+        @media (max-width: 800px) {
+            #controls-panel {
+                flex-wrap: wrap;
+                padding: 15px 20px;
+                border-radius: 40px;
+            }
+
+            .joystick-area {
+                flex: 0 0 130px;
+            }
+
+            .joystick {
+                width: 120px;
+                height: 120px;
+            }
+
+            .joystick-head {
+                width: 50px;
+                height: 50px;
+            }
+
+            .action-button {
+                min-width: 70px;
+                height: 55px;
+                font-size: 16px;
+                padding: 0 15px;
+            }
+
+            .fire-area {
+                flex: 0 0 120px;
+            }
+
+            .fire-button {
+                width: 90px;
+                height: 90px;
+                font-size: 22px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .action-area {
+                gap: 10px;
+            }
+
+            .action-button {
+                min-width: 60px;
+                height: 45px;
+                font-size: 14px;
+            }
+        }
+
+        /* ========== 隐藏所有原始辅助元素，但必须保留以供 main.js 使用 ========== */
+        .hidden-helper {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+            pointer-events: none;
+        }
+
+        #output {
+            /* 专门处理：原main.js会向其中appendChild，所以不能display:none，只能用hidden-helper方式 */
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== 所有 main.js 可能需要的隐藏元素 ===== -->
+    <div id="output"></div>
+    <p id="focushint" class="hidden-helper"></p>
+    <button id="enterButton" class="hidden-helper"></button>
+    <button id="leftButton" class="hidden-helper"></button>
+    <button id="upButton" class="hidden-helper"></button>
+    <button id="downButton" class="hidden-helper"></button>
+    <button id="rightButton" class="hidden-helper"></button>
+    <button id="ctrlButton" class="hidden-helper"></button>
+    <button id="spaceButton" class="hidden-helper"></button>
+    <button id="altButton" class="hidden-helper"></button>
+    <span id="getmsps_stats" class="hidden-helper">0</span>
+    <span id="getms_stats" class="hidden-helper">0</span>
+    <span id="fps_stats" class="hidden-helper">0</span>
+    <span id="drawframes_stats" class="hidden-helper">0</span>
+    <span id="animationfps_stats" class="hidden-helper">0</span>
+    <!-- ========================================= -->
+
+    <div id="game-wrapper">
+        <!-- 画布容器（Doom 画面） -->
+        <div id="canvas-container">
+            <canvas id="screen" width="640" height="400" tabindex="0">This is where the DooM screen should render.</canvas>
+        </div>
+
+        <!-- 控制面板 -->
+        <div id="controls-panel">
+            <!-- 左侧摇杆 -->
+            <div class="joystick-area">
+                <div class="joystick" id="joystick">
+                    <div class="joystick-head" id="joystick-head"></div>
+                </div>
+            </div>
+
+            <!-- 中间功能按钮：选择(Enter)、使用(Space)、返回(Esc) -->
+            <div class="action-area">
+                <div class="action-button" id="enterBtn">选择</div>
+                <div class="action-button" id="spaceBtn">使用</div>
+                <div class="action-button" id="escBtn">返回</div>
+            </div>
+
+            <!-- 右侧射击按钮 (Ctrl) -->
+            <div class="fire-area">
+                <div class="fire-button" id="fireBtn">射击</div>
+            </div>
+        </div>
+        <!-- 轻提示 -->
+        <div class="hint">拖动摇杆移动 · 点击射击 · 键盘同样可用</div>
+    </div>
+
+    <!-- 原有的 main.js 必须保留，它负责启动 Doom 引擎 -->
+    <script src="main.js" defer></script>
+
+    <!-- 自定义虚拟摇杆 + 按钮逻辑 -->
+    <script>
+        (function() {
+        const canvas = document.getElementById('screen');
+
+        // ---------- 键盘事件模拟器 ----------
+        function dispatchKeyEvent(type, key, code, keyCode) {
+        const event = new KeyboardEvent(type, {
+        key: key,
+        code: code,
+        keyCode: keyCode,
+        which: keyCode,
+        bubbles: true,
+        cancelable: true
+        });
+        canvas.dispatchEvent(event);
+        document.dispatchEvent(event);
+        }
+
+        const keyMap = {
+        up:    { key: 'ArrowUp',    code: 'ArrowUp',    keyCode: 38 },
+        down:  { key: 'ArrowDown',  code: 'ArrowDown',  keyCode: 40 },
+        left:  { key: 'ArrowLeft',  code: 'ArrowLeft',  keyCode: 37 },
+        right: { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
+        fire:  { key: 'Control',    code: 'ControlLeft', keyCode: 17 },
+        enter: { key: 'Enter',      code: 'Enter',      keyCode: 13 },
+        space: { key: ' ',          code: 'Space',      keyCode: 32 },
+        escape:{ key: 'Escape',     code: 'Escape',     keyCode: 27 }
+        };
+
+        const activeKeys = { up: false, down: false, left: false, right: false };
+        const activeButtons = { fire: false, enter: false, space: false, escape: false };
+
+        function setKeyState(keyType, pressed) {
+        const keyInfo = keyMap[keyType];
+        if (!keyInfo) return;
+        if (keyType === 'up' || keyType === 'down' || keyType === 'left' || keyType === 'right') {
+        if (activeKeys[keyType] === pressed) return;
+        activeKeys[keyType] = pressed;
+        } else {
+        if (activeButtons[keyType] === pressed) return;
+        activeButtons[keyType] = pressed;
+        }
+        const eventType = pressed ? 'keydown' : 'keyup';
+        dispatchKeyEvent(eventType, keyInfo.key, keyInfo.code, keyInfo.keyCode);
+        }
+
+        // ---------- 摇杆 ----------
+        const joystick = document.getElementById('joystick');
+        const head = document.getElementById('joystick-head');
+        let isDragging = false;
+        const maxOffset = 45;
+        const deadZone = 10;
+
+        let rect = joystick.getBoundingClientRect();
+        function updateRect() {
+        rect = joystick.getBoundingClientRect();
+        }
+        window.addEventListener('resize', updateRect);
+
+        function handleMove(clientX, clientY) {
+        if (!isDragging) return;
+        const dx = clientX - (rect.left + rect.width / 2);
+        const dy = clientY - (rect.top + rect.height / 2);
+        let distance = Math.sqrt(dx*dx + dy*dy);
+        let limitedDx = dx, limitedDy = dy;
+        if (distance > maxOffset) {
+        limitedDx = (dx / distance) * maxOffset;
+        limitedDy = (dy / distance) * maxOffset;
+        }
+        head.style.transform = `translate(${limitedDx}px, ${limitedDy}px)`;
+
+        const x = limitedDx, y = limitedDy;
+        // 水平
+        if (Math.abs(x) > deadZone) {
+        if (x > 0) {
+        setKeyState('right', true);
+        setKeyState('left', false);
+        } else {
+        setKeyState('left', true);
+        setKeyState('right', false);
+        }
+        } else {
+        setKeyState('left', false);
+        setKeyState('right', false);
+        }
+        // 垂直
+        if (Math.abs(y) > deadZone) {
+        if (y > 0) {
+        setKeyState('down', true);
+        setKeyState('up', false);
+        } else {
+        setKeyState('up', true);
+        setKeyState('down', false);
+        }
+        } else {
+        setKeyState('up', false);
+        setKeyState('down', false);
+        }
+        }
+
+        function startDrag(e) {
+        e.preventDefault();
+        isDragging = true;
+        updateRect();
+        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+        handleMove(clientX, clientY);
+        }
+        function onDrag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+        handleMove(clientX, clientY);
+        }
+        function stopDrag(e) {
+        if (isDragging) {
+        e.preventDefault();
+        head.style.transform = `translate(0px, 0px)`;
+        setKeyState('up', false);
+        setKeyState('down', false);
+        setKeyState('left', false);
+        setKeyState('right', false);
+        isDragging = false;
+        }
+        }
+
+        joystick.addEventListener('mousedown', startDrag);
+        window.addEventListener('mousemove', onDrag);
+        window.addEventListener('mouseup', stopDrag);
+        joystick.addEventListener('touchstart', startDrag, { passive: false });
+        window.addEventListener('touchmove', onDrag, { passive: false });
+        window.addEventListener('touchend', stopDrag);
+        window.addEventListener('touchcancel', stopDrag);
+
+        // ---------- 按钮绑定 ----------
+        function bindButton(btnId, keyType) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        const keyInfo = keyMap[keyType];
+        if (!keyInfo) return;
+
+        const onPress = (e) => {
+        e.preventDefault();
+        canvas.focus();
+        setKeyState(keyType, true);
+        };
+        const onRelease = (e) => {
+        e.preventDefault();
+        setKeyState(keyType, false);
+        };
+
+        btn.addEventListener('mousedown', onPress);
+        btn.addEventListener('mouseup', onRelease);
+        btn.addEventListener('mouseleave', onRelease);
+        btn.addEventListener('touchstart', onPress, { passive: false });
+        btn.addEventListener('touchend', onRelease);
+        btn.addEventListener('touchcancel', onRelease);
+        }
+
+        bindButton('fireBtn', 'fire');
+        bindButton('enterBtn', 'enter');
+        bindButton('spaceBtn', 'space');
+        bindButton('escBtn', 'escape');
+
+        // 全局释放
+        window.addEventListener('mouseup', (e) => {
+        if (isDragging) return;
+        setKeyState('up', false);
+        setKeyState('down', false);
+        setKeyState('left', false);
+        setKeyState('right', false);
+        });
+        window.addEventListener('touchend', (e) => {
+        if (isDragging) return;
+        setKeyState('up', false);
+        setKeyState('down', false);
+        setKeyState('left', false);
+        setKeyState('right', false);
+        });
+
+        canvas.addEventListener('click', () => canvas.focus());
+        window.addEventListener('load', () => canvas.focus());
+
+        document.body.addEventListener('touchmove', (e) => {
+        if (isDragging) e.preventDefault();
+        }, { passive: false });
+        })();
+    </script>
+</body>
+</html>
