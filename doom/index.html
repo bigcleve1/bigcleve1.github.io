@@ -24,7 +24,7 @@
         #game-wrapper {
             width: 100%;
             height: 100%;
-            max-width: 1200px; /* 限制最大宽度，保证大屏幕不过大 */
+            max-width: 1200px;
             max-height: 900px;
             display: flex;
             flex-direction: column;
@@ -42,7 +42,7 @@
             justify-content: center;
             min-height: 0;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             background: #c0c0c0;
             border: 3px solid #dfdfdf;
             border-right-color: #404040;
@@ -56,7 +56,7 @@
             width: auto;
             height: 100%;
             max-width: 100%;
-            max-height: 70vh;
+            max-height: 60vh; /* 稍微降低，为数字按钮留空间 */
             background: #000;
             border: 2px solid #808080;
             outline: none;
@@ -69,32 +69,32 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 2vw; /* 使用视口宽度的比例，保证间距自适应 */
+            gap: 2vw;
             padding: 2vh 2vw;
             background: #c0c0c0;
             border: 3px solid #dfdfdf;
             border-right-color: #404040;
             border-bottom-color: #404040;
             box-sizing: border-box;
-            flex-wrap: nowrap; /* 禁止换行，让所有元素在同一行缩放 */
+            flex-wrap: nowrap;
+            margin-bottom: 10px;
         }
 
         /* 摇杆区域 (左侧) */
         .joystick-area {
-            flex: 0 0 auto; /* 不放大，不缩小，宽度由内部决定 */
+            flex: 0 0 auto;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-width: 120px; /* 最小宽度，防止太小时触摸困难 */
+            min-width: 100px;
         }
 
-        /* 摇杆容器 */
         .joystick {
             position: relative;
-            width: 15vw; /* 基于视口宽度缩放 */
-            max-width: 150px; /* 最大尺寸 */
-            min-width: 100px; /* 最小尺寸，保持可操作 */
-            aspect-ratio: 1 / 1; /* 保持正方形 */
+            width: 15vw;
+            max-width: 140px;
+            min-width: 90px;
+            aspect-ratio: 1 / 1;
             background: #a0a0a0;
             border: 3px solid #dfdfdf;
             border-right-color: #404040;
@@ -110,9 +110,8 @@
                 cursor: grabbing;
             }
 
-        /* 摇杆头部 */
         .joystick-head {
-            width: 40%; /* 相对父容器比例 */
+            width: 40%;
             aspect-ratio: 1 / 1;
             background: #c0c0c0;
             border: 3px solid #ffffff;
@@ -126,26 +125,26 @@
 
         /* 中间功能按钮区域 */
         .action-area {
-            flex: 1 1 auto; /* 自动占据剩余空间，并允许缩放 */
+            flex: 1 1 auto;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 1.5vw;
-            min-width: 200px; /* 防止被压缩得太窄 */
+            min-width: 200px;
         }
 
         .action-button {
-            flex: 0 1 auto; /* 允许缩小，但不放大 */
-            min-width: 70px;
-            height: 7vh; /* 基于视口高度缩放 */
-            max-height: 70px;
-            min-height: 45px;
+            flex: 0 1 auto;
+            min-width: 60px;
+            height: 7vh;
+            max-height: 65px;
+            min-height: 40px;
             background: #c0c0c0;
             border: 3px solid #ffffff;
             border-right-color: #808080;
             border-bottom-color: #808080;
             color: black;
-            font-size: clamp(14px, 2vw, 20px); /* 动态字体大小 */
+            font-size: clamp(12px, 2vw, 18px);
             font-weight: bold;
             font-family: "MS Sans Serif", "Arial", sans-serif;
             padding: 0 2vw;
@@ -157,8 +156,6 @@
             text-transform: uppercase;
             white-space: nowrap;
             box-sizing: border-box;
-            box-shadow: none;
-            transition: none;
         }
 
             .action-button:active {
@@ -175,20 +172,20 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-width: 100px;
+            min-width: 80px;
         }
 
         .fire-button {
-            width: 12vw; /* 基于视口宽度缩放 */
-            max-width: 120px;
-            min-width: 80px;
+            width: 12vw;
+            max-width: 110px;
+            min-width: 70px;
             aspect-ratio: 1 / 1;
             background: #c0c0c0;
             border: 4px solid #ffffff;
             border-right-color: #808080;
             border-bottom-color: #808080;
             color: black;
-            font-size: clamp(18px, 3vw, 28px);
+            font-size: clamp(16px, 3vw, 24px);
             font-weight: bold;
             font-family: "MS Sans Serif", "Arial", sans-serif;
             text-transform: uppercase;
@@ -208,21 +205,85 @@
                 transform: translate(2px, 2px);
             }
 
+        /* ========== 数字按钮区域（新增） ========== */
+        #number-panel {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5vw;
+            padding: 1.5vh 1vw;
+            background: #c0c0c0;
+            border: 3px solid #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            flex-wrap: wrap; /* 允许换行，但尽量在一行 */
+        }
+
+        .number-button {
+            flex: 0 1 auto;
+            width: 8vw;
+            max-width: 70px;
+            min-width: 45px;
+            aspect-ratio: 1 / 1;
+            background: #c0c0c0;
+            border: 3px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            color: black;
+            font-size: clamp(16px, 3vw, 24px);
+            font-weight: bold;
+            font-family: "MS Sans Serif", "Arial", sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+            .number-button:active {
+                border: 3px solid #808080;
+                border-right-color: #ffffff;
+                border-bottom-color: #ffffff;
+                background: #a0a0a0;
+                transform: translate(1px, 1px);
+            }
+
         /* 底部提示 */
         .hint {
             color: white;
-            font-size: clamp(12px, 1.5vw, 16px);
-            margin-top: 10px;
+            font-size: clamp(10px, 1.5vw, 14px);
             text-align: center;
             background: #000080;
-            padding: 6px 20px;
+            padding: 5px 15px;
             border: 2px solid #dfdfdf;
             border-right-color: #404040;
             border-bottom-color: #404040;
             font-family: "MS Sans Serif", "Arial", sans-serif;
             width: fit-content;
-            max-width: 90%;
+            max-width: 95%;
             white-space: nowrap;
+            margin-top: 5px;
+        }
+
+        /* 极端小屏幕 */
+        @media (max-width: 500px) {
+            #number-panel {
+                gap: 1vw;
+            }
+
+            .number-button {
+                min-width: 35px;
+                font-size: 14px;
+            }
+
+            .action-button {
+                font-size: 11px;
+                padding: 0 5px;
+            }
         }
 
         /* ========== 隐藏辅助元素 ========== */
@@ -247,24 +308,6 @@
             overflow: hidden;
             clip: rect(0, 0, 0, 0);
             border: 0;
-        }
-
-        /* 极端小屏幕下的额外优化（例如宽度小于400px） */
-        @media (max-width: 450px) {
-            .action-button {
-                font-size: 12px;
-                padding: 0 5px;
-                min-width: 50px;
-            }
-
-            .fire-button {
-                font-size: 16px;
-            }
-
-            .hint {
-                font-size: 10px;
-                padding: 4px 10px;
-            }
         }
     </style>
 </head>
@@ -292,7 +335,7 @@
             <canvas id="screen" width="640" height="400" tabindex="0">This is where the DooM screen should render.</canvas>
         </div>
 
-        <!-- 控制面板 (自适应布局) -->
+        <!-- 控制面板 (主按键) -->
         <div id="controls-panel">
             <!-- 左侧摇杆 -->
             <div class="joystick-area">
@@ -313,14 +356,28 @@
                 <div class="fire-button" id="fireBtn">射击</div>
             </div>
         </div>
+
+        <!-- 新增数字按钮区域 (1-9) 用于切换武器 -->
+        <div id="number-panel">
+            <div class="number-button" id="num1">1</div>
+            <div class="number-button" id="num2">2</div>
+            <div class="number-button" id="num3">3</div>
+            <div class="number-button" id="num4">4</div>
+            <div class="number-button" id="num5">5</div>
+            <div class="number-button" id="num6">6</div>
+            <div class="number-button" id="num7">7</div>
+            <div class="number-button" id="num8">8</div>
+            <div class="number-button" id="num9">9</div>
+        </div>
+
         <!-- 底部提示 -->
-        <div class="hint">拖动摇杆移动 · 点击射击 · 键盘同样可用</div>
+        <div class="hint">你们好震撼首发</div>
     </div>
 
     <!-- 原有的 main.js 必须保留 -->
     <script src="main.js" defer></script>
 
-    <!-- 自定义虚拟摇杆 + 按钮逻辑 (完全保留) -->
+    <!-- 自定义虚拟摇杆 + 按钮逻辑 (增加数字键支持) -->
     <script>
         (function() {
         const canvas = document.getElementById('screen');
@@ -339,23 +396,42 @@
         document.dispatchEvent(event);
         }
 
+        // 扩展 keyMap，加入数字 1-9
         const keyMap = {
+        // 方向
         up:    { key: 'ArrowUp',    code: 'ArrowUp',    keyCode: 38 },
         down:  { key: 'ArrowDown',  code: 'ArrowDown',  keyCode: 40 },
         left:  { key: 'ArrowLeft',  code: 'ArrowLeft',  keyCode: 37 },
         right: { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
+        // 功能
         fire:  { key: 'Control',    code: 'ControlLeft', keyCode: 17 },
         enter: { key: 'Enter',      code: 'Enter',      keyCode: 13 },
         space: { key: ' ',          code: 'Space',      keyCode: 32 },
-        escape:{ key: 'Escape',     code: 'Escape',     keyCode: 27 }
+        escape:{ key: 'Escape',     code: 'Escape',     keyCode: 27 },
+        // 数字 1-9
+        digit1: { key: '1', code: 'Digit1', keyCode: 49 },
+        digit2: { key: '2', code: 'Digit2', keyCode: 50 },
+        digit3: { key: '3', code: 'Digit3', keyCode: 51 },
+        digit4: { key: '4', code: 'Digit4', keyCode: 52 },
+        digit5: { key: '5', code: 'Digit5', keyCode: 53 },
+        digit6: { key: '6', code: 'Digit6', keyCode: 54 },
+        digit7: { key: '7', code: 'Digit7', keyCode: 55 },
+        digit8: { key: '8', code: 'Digit8', keyCode: 56 },
+        digit9: { key: '9', code: 'Digit9', keyCode: 57 }
         };
 
+        // 活动按键状态
         const activeKeys = { up: false, down: false, left: false, right: false };
-        const activeButtons = { fire: false, enter: false, space: false, escape: false };
+        const activeButtons = {
+        fire: false, enter: false, space: false, escape: false,
+        digit1: false, digit2: false, digit3: false, digit4: false, digit5: false,
+        digit6: false, digit7: false, digit8: false, digit9: false
+        };
 
         function setKeyState(keyType, pressed) {
         const keyInfo = keyMap[keyType];
         if (!keyInfo) return;
+        // 方向键单独处理，其他都放入 activeButtons
         if (keyType === 'up' || keyType === 'down' || keyType === 'left' || keyType === 'right') {
         if (activeKeys[keyType] === pressed) return;
         activeKeys[keyType] = pressed;
@@ -371,15 +447,13 @@
         const joystick = document.getElementById('joystick');
         const head = document.getElementById('joystick-head');
         let isDragging = false;
-        // 将最大偏移量设为摇杆容器尺寸的比例，使摇杆在小屏幕上也能合理移动
-        let maxOffset = 45; // 初始默认值
+        let maxOffset = 45;
         const deadZone = 10;
 
         let rect = joystick.getBoundingClientRect();
         function updateRect() {
         rect = joystick.getBoundingClientRect();
-        // 根据当前摇杆大小动态调整最大偏移量（摇杆头移动范围）
-        maxOffset = rect.width * 0.3; // 约30%的容器宽度
+        maxOffset = rect.width * 0.3;
         }
         window.addEventListener('resize', updateRect);
 
@@ -396,7 +470,6 @@
         head.style.transform = `translate(${limitedDx}px, ${limitedDy}px)`;
 
         const x = limitedDx, y = limitedDy;
-        // 水平
         if (Math.abs(x) > deadZone) {
         if (x > 0) {
         setKeyState('right', true);
@@ -409,7 +482,6 @@
         setKeyState('left', false);
         setKeyState('right', false);
         }
-        // 垂直
         if (Math.abs(y) > deadZone) {
         if (y > 0) {
         setKeyState('down', true);
@@ -459,16 +531,10 @@
         window.addEventListener('touchend', stopDrag);
         window.addEventListener('touchcancel', stopDrag);
 
-        // 初始化更新一次rect
-        updateRect();
-
-        // ---------- 按钮绑定 ----------
+        // ---------- 按钮绑定（通用函数）----------
         function bindButton(btnId, keyType) {
         const btn = document.getElementById(btnId);
         if (!btn) return;
-        const keyInfo = keyMap[keyType];
-        if (!keyInfo) return;
-
         const onPress = (e) => {
         e.preventDefault();
         canvas.focus();
@@ -478,7 +544,6 @@
         e.preventDefault();
         setKeyState(keyType, false);
         };
-
         btn.addEventListener('mousedown', onPress);
         btn.addEventListener('mouseup', onRelease);
         btn.addEventListener('mouseleave', onRelease);
@@ -487,18 +552,34 @@
         btn.addEventListener('touchcancel', onRelease);
         }
 
+        // 绑定原有按钮
         bindButton('fireBtn', 'fire');
         bindButton('enterBtn', 'enter');
         bindButton('spaceBtn', 'space');
         bindButton('escBtn', 'escape');
 
-        // 全局释放
+        // 绑定数字按钮 1-9
+        bindButton('num1', 'digit1');
+        bindButton('num2', 'digit2');
+        bindButton('num3', 'digit3');
+        bindButton('num4', 'digit4');
+        bindButton('num5', 'digit5');
+        bindButton('num6', 'digit6');
+        bindButton('num7', 'digit7');
+        bindButton('num8', 'digit8');
+        bindButton('num9', 'digit9');
+
+        // 全局释放（防止按键卡死）
         window.addEventListener('mouseup', (e) => {
         if (isDragging) return;
         setKeyState('up', false);
         setKeyState('down', false);
         setKeyState('left', false);
         setKeyState('right', false);
+        // 同时释放所有数字键（保险）
+        for (let i = 1; i <= 9; i++) {
+        setKeyState('digit' + i, false);
+        }
         });
         window.addEventListener('touchend', (e) => {
         if (isDragging) return;
@@ -506,6 +587,9 @@
         setKeyState('down', false);
         setKeyState('left', false);
         setKeyState('right', false);
+        for (let i = 1; i <= 9; i++) {
+        setKeyState('digit' + i, false);
+        }
         });
 
         canvas.addEventListener('click', () => canvas.focus());
@@ -514,6 +598,9 @@
         document.body.addEventListener('touchmove', (e) => {
         if (isDragging) e.preventDefault();
         }, { passive: false });
+
+        // 初始化一次矩形
+        updateRect();
         })();
     </script>
 </body>
