@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DOOM526</title>
     <style>
-        /* 全局样式：深色背景，毛玻璃，液态玻璃效果 */
+        /* ========== Windows 95 全局样式 ========== */
         body {
             margin: 0;
             padding: 0;
-            background: #050505;
-            font-family: -apple-system, "SF Pro Text", "Microsoft YaHei", sans-serif;
-            color: white;
+            background: #008080; /* 经典桌面背景 */
+            font-family: "MS Sans Serif", "Arial", sans-serif;
+            color: black;
             overflow: hidden;
             touch-action: none;
             user-select: none;
@@ -24,15 +24,16 @@
         #game-wrapper {
             width: 100%;
             height: 100%;
-            max-width: 1300px;
+            max-width: 1200px; /* 限制最大宽度，保证大屏幕不过大 */
             max-height: 900px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
             box-sizing: border-box;
         }
+
         /* 画布容器 */
         #canvas-container {
             flex: 1 1 auto;
@@ -41,7 +42,13 @@
             justify-content: center;
             min-height: 0;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            background: #c0c0c0;
+            border: 3px solid #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         canvas {
@@ -50,44 +57,48 @@
             height: 100%;
             max-width: 100%;
             max-height: 70vh;
-            border-radius: 28px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08);
             background: #000;
+            border: 2px solid #808080;
             outline: none;
+            image-rendering: pixelated;
         }
-        /* 控制面板 —— 液态玻璃 */
+
+        /* ========== 控制面板 (响应式) ========== */
         #controls-panel {
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            padding: 20px 30px;
-            background: rgba(22, 22, 24, 0.8);
-            backdrop-filter: blur(40px) saturate(200%);
-            -webkit-backdrop-filter: blur(40px) saturate(200%);
-            border-radius: 60px;
-            border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.1);
+            gap: 2vw; /* 使用视口宽度的比例，保证间距自适应 */
+            padding: 2vh 2vw;
+            background: #c0c0c0;
+            border: 3px solid #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
             box-sizing: border-box;
+            flex-wrap: nowrap; /* 禁止换行，让所有元素在同一行缩放 */
         }
-        /* 摇杆区域（左侧） */
+
+        /* 摇杆区域 (左侧) */
         .joystick-area {
-            flex: 0 0 180px;
+            flex: 0 0 auto; /* 不放大，不缩小，宽度由内部决定 */
             display: flex;
             justify-content: center;
             align-items: center;
+            min-width: 120px; /* 最小宽度，防止太小时触摸困难 */
         }
+
         /* 摇杆容器 */
         .joystick {
             position: relative;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: rgba(35, 35, 40, 0.6);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(255,255,255,0.15);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1);
+            width: 15vw; /* 基于视口宽度缩放 */
+            max-width: 150px; /* 最大尺寸 */
+            min-width: 100px; /* 最小尺寸，保持可操作 */
+            aspect-ratio: 1 / 1; /* 保持正方形 */
+            background: #a0a0a0;
+            border: 3px solid #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -98,157 +109,123 @@
             .joystick:active {
                 cursor: grabbing;
             }
+
         /* 摇杆头部 */
         .joystick-head {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #f0f0f0, #a0a0a0);
-            border: 2px solid rgba(255,255,255,0.6);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.2);
+            width: 40%; /* 相对父容器比例 */
+            aspect-ratio: 1 / 1;
+            background: #c0c0c0;
+            border: 3px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
             transition: transform 0.02s linear;
             pointer-events: none;
             will-change: transform;
+            box-sizing: border-box;
         }
+
         /* 中间功能按钮区域 */
         .action-area {
-            flex: 1;
+            flex: 1 1 auto; /* 自动占据剩余空间，并允许缩放 */
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 25px;
+            gap: 1.5vw;
+            min-width: 200px; /* 防止被压缩得太窄 */
         }
 
         .action-button {
-            min-width: 100px;
-            height: 70px;
-            border-radius: 40px;
-            background: rgba(255,255,255,0.07);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.1);
-            color: white;
-            font-size: 20px;
-            font-weight: 600;
-            padding: 0 25px;
+            flex: 0 1 auto; /* 允许缩小，但不放大 */
+            min-width: 70px;
+            height: 7vh; /* 基于视口高度缩放 */
+            max-height: 70px;
+            min-height: 45px;
+            background: #c0c0c0;
+            border: 3px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            color: black;
+            font-size: clamp(14px, 2vw, 20px); /* 动态字体大小 */
+            font-weight: bold;
+            font-family: "MS Sans Serif", "Arial", sans-serif;
+            padding: 0 2vw;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            white-space: nowrap;
+            box-sizing: border-box;
+            box-shadow: none;
+            transition: none;
         }
 
-            .action-button:hover {
-                background: rgba(255,255,255,0.15);
-                transform: translateY(-3px);
-                box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            .action-button:active {
+                border: 3px solid #808080;
+                border-right-color: #ffffff;
+                border-bottom-color: #ffffff;
+                background: #a0a0a0;
+                transform: translate(1px, 1px);
             }
 
-            .action-button:active {
-                transform: scale(0.94);
-                background: rgba(0,122,255,0.6);
-                border-color: rgba(255,255,255,0.3);
-            }
         /* 射击按钮（右侧） */
         .fire-area {
-            flex: 0 0 160px;
+            flex: 0 0 auto;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-width: 100px;
         }
 
         .fire-button {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #ff3b30, #b0251a);
-            border: 4px solid rgba(255,255,255,0.2);
-            box-shadow: 0 20px 35px rgba(255,59,48,0.5), inset 0 -5px 0 rgba(0,0,0,0.3), inset 0 5px 8px rgba(255,255,255,0.3);
-            color: white;
-            font-size: 28px;
-            font-weight: 900;
+            width: 12vw; /* 基于视口宽度缩放 */
+            max-width: 120px;
+            min-width: 80px;
+            aspect-ratio: 1 / 1;
+            background: #c0c0c0;
+            border: 4px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            color: black;
+            font-size: clamp(18px, 3vw, 28px);
+            font-weight: bold;
+            font-family: "MS Sans Serif", "Arial", sans-serif;
             text-transform: uppercase;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
-            backdrop-filter: blur(5px);
-            letter-spacing: 2px;
+            box-sizing: border-box;
         }
 
             .fire-button:active {
-                transform: scale(0.8);
-                box-shadow: 0 10px 25px rgba(255,59,48,0.8), inset 0 5px 10px rgba(0,0,0,0.4);
+                border: 4px solid #808080;
+                border-right-color: #ffffff;
+                border-bottom-color: #ffffff;
+                background: #a0a0a0;
+                transform: translate(2px, 2px);
             }
+
         /* 底部提示 */
         .hint {
-            color: rgba(255,255,255,0.3);
-            font-size: 13px;
-            margin-top: 12px;
+            color: white;
+            font-size: clamp(12px, 1.5vw, 16px);
+            margin-top: 10px;
             text-align: center;
-            backdrop-filter: blur(5px);
+            background: #000080;
             padding: 6px 20px;
-            border-radius: 40px;
-            background: rgba(0,0,0,0.2);
-        }
-        /* 响应式 */
-        @media (max-width: 800px) {
-            #controls-panel {
-                flex-wrap: wrap;
-                padding: 15px 20px;
-                border-radius: 40px;
-            }
-
-            .joystick-area {
-                flex: 0 0 130px;
-            }
-
-            .joystick {
-                width: 120px;
-                height: 120px;
-            }
-
-            .joystick-head {
-                width: 50px;
-                height: 50px;
-            }
-
-            .action-button {
-                min-width: 70px;
-                height: 55px;
-                font-size: 16px;
-                padding: 0 15px;
-            }
-
-            .fire-area {
-                flex: 0 0 120px;
-            }
-
-            .fire-button {
-                width: 90px;
-                height: 90px;
-                font-size: 22px;
-            }
+            border: 2px solid #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            font-family: "MS Sans Serif", "Arial", sans-serif;
+            width: fit-content;
+            max-width: 90%;
+            white-space: nowrap;
         }
 
-        @media (max-width: 500px) {
-            .action-area {
-                gap: 10px;
-            }
-
-            .action-button {
-                min-width: 60px;
-                height: 45px;
-                font-size: 14px;
-            }
-        }
-
-        /* ========== 隐藏所有原始辅助元素，但必须保留以供 main.js 使用 ========== */
+        /* ========== 隐藏辅助元素 ========== */
         .hidden-helper {
             position: absolute;
             width: 1px;
@@ -262,7 +239,6 @@
         }
 
         #output {
-            /* 专门处理：原main.js会向其中appendChild，所以不能display:none，只能用hidden-helper方式 */
             position: absolute;
             width: 1px;
             height: 1px;
@@ -272,10 +248,28 @@
             clip: rect(0, 0, 0, 0);
             border: 0;
         }
+
+        /* 极端小屏幕下的额外优化（例如宽度小于400px） */
+        @media (max-width: 450px) {
+            .action-button {
+                font-size: 12px;
+                padding: 0 5px;
+                min-width: 50px;
+            }
+
+            .fire-button {
+                font-size: 16px;
+            }
+
+            .hint {
+                font-size: 10px;
+                padding: 4px 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- ===== 所有 main.js 可能需要的隐藏元素 ===== -->
+    <!-- 保留所有 main.js 必需的隐藏元素 -->
     <div id="output"></div>
     <p id="focushint" class="hidden-helper"></p>
     <button id="enterButton" class="hidden-helper"></button>
@@ -291,15 +285,14 @@
     <span id="fps_stats" class="hidden-helper">0</span>
     <span id="drawframes_stats" class="hidden-helper">0</span>
     <span id="animationfps_stats" class="hidden-helper">0</span>
-    <!-- ========================================= -->
 
     <div id="game-wrapper">
-        <!-- 画布容器（Doom 画面） -->
+        <!-- 画布容器 -->
         <div id="canvas-container">
             <canvas id="screen" width="640" height="400" tabindex="0">This is where the DooM screen should render.</canvas>
         </div>
 
-        <!-- 控制面板 -->
+        <!-- 控制面板 (自适应布局) -->
         <div id="controls-panel">
             <!-- 左侧摇杆 -->
             <div class="joystick-area">
@@ -320,14 +313,14 @@
                 <div class="fire-button" id="fireBtn">射击</div>
             </div>
         </div>
-        <!-- 轻提示 -->
+        <!-- 底部提示 -->
         <div class="hint">拖动摇杆移动 · 点击射击 · 键盘同样可用</div>
     </div>
 
-    <!-- 原有的 main.js 必须保留，它负责启动 Doom 引擎 -->
+    <!-- 原有的 main.js 必须保留 -->
     <script src="main.js" defer></script>
 
-    <!-- 自定义虚拟摇杆 + 按钮逻辑 -->
+    <!-- 自定义虚拟摇杆 + 按钮逻辑 (完全保留) -->
     <script>
         (function() {
         const canvas = document.getElementById('screen');
@@ -378,12 +371,15 @@
         const joystick = document.getElementById('joystick');
         const head = document.getElementById('joystick-head');
         let isDragging = false;
-        const maxOffset = 45;
+        // 将最大偏移量设为摇杆容器尺寸的比例，使摇杆在小屏幕上也能合理移动
+        let maxOffset = 45; // 初始默认值
         const deadZone = 10;
 
         let rect = joystick.getBoundingClientRect();
         function updateRect() {
         rect = joystick.getBoundingClientRect();
+        // 根据当前摇杆大小动态调整最大偏移量（摇杆头移动范围）
+        maxOffset = rect.width * 0.3; // 约30%的容器宽度
         }
         window.addEventListener('resize', updateRect);
 
@@ -462,6 +458,9 @@
         window.addEventListener('touchmove', onDrag, { passive: false });
         window.addEventListener('touchend', stopDrag);
         window.addEventListener('touchcancel', stopDrag);
+
+        // 初始化更新一次rect
+        updateRect();
 
         // ---------- 按钮绑定 ----------
         function bindButton(btnId, keyType) {
